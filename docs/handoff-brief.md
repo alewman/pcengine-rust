@@ -7,8 +7,16 @@ fast and the play-pce site ready." The order (megadrive, a2600 and famicom prece
 
 1. huc6280-rust: the CPU core (`/data/emu/huc6280-rust`, transcribed from huc6280-python v0.3.0).
 2. **pcengine-rust** (this repository): the board.
-3. pcengine-rust-fast: the ladder-gated speed fork, with the SDL2 window (`pce-play`).
-4. play-pce: the fast board in the browser (wasm), like play-2600 and play-nes.
+3. supergrafx-rust and pcenginecd-rust: the add-ons, transcribed from supergrafx-python and
+   pcenginecd-python v0.1.0, plugging into this board's socket traits.
+4. The ladder-gated speed forks, with the SDL2 window (`pce-play`).
+5. play-pce: the fast boards in the browser (wasm), like play-2600 and play-nes.
+
+**Aubrey, 2026-11-12: play-pce is to run any game of the PC Engine family**: HuCards, SuperGrafx
+cards, CD-ROM², Super CD-ROM² and Arcade Card discs. So the add-ons are not optional later work:
+the socket traits of this board are what they will be built on next, and they must be complete and
+exercised here (rung 5 below drives each socket with a test device, as the Python board's
+`tests/fake_devices.py` does).
 
 ## What it is
 
@@ -98,7 +106,10 @@ Each rung has `scripts/rungN.sh` and passes only when its output says so.
    6-button and multitap users if any, and classics), the full 179 only when the smoke is clean.
    The Street Fighter II' card is read in place from the path in pcengine-python
    `docs/cartridge.md`.
-5. **Machines and switches**: the TurboGrafx-16 row, a `power_on_seed`, and each named switch in
+5. **Machines, sockets and switches**: every socket driven by a test device transcribed from
+   pcengine-python `tests/fake_devices.py` and its `tests/test_sockets.py` (a second VDC with a
+   pixel path, a port device with an IRQ2 source and an audio source, a card with RAM), in
+   lockstep with the same fake on the Python side; the TurboGrafx-16 row, a `power_on_seed`, and each named switch in
    its non-default position on at least one case (the gate proves the switch is wired, not that
    it is right).
 6. **Save states**: the round trip of pcengine-python `scripts/state_roundtrip.py` on the Rust
