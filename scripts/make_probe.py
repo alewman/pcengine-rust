@@ -260,6 +260,16 @@ def build() -> bytes:
     a.lda_abs(0x0002)
     a.lda_abs(0x0003)
     frames(6)
+    # a second DMA left alone until the display period has started: paused, or cancelled
+    # (`dma_resumes`); the sprite pattern's words reach $7000 only if it goes on afterwards
+    a.vdc(0x10, 0x1000)
+    a.vdc(0x11, 0x6000)
+    a.vdc(0x12, 0x1FFF)
+    frames(1)
+    a.vdc_sta(0x01, 0x7004)
+    a.lda_abs(0x0002)
+    a.lda_abs(0x0003)
+    frames(2)
     a.vdc_sta(0x01, 0x3004)
     a.lda_abs(0x0002)
     a.lda_abs(0x0003)
