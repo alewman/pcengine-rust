@@ -181,7 +181,7 @@ repository exists.
 | 4 | smoke 20 of 20, then the library 179 of 179 and the Street Fighter II' card: identical, 300 frames each |
 | 5 | 71 of 71 identical; `switch_effect.py`: 37 of 37 switches and devices change at least one of their cases |
 | 6 | 18 of 18 titles: saved 148-2,477 instructions into frame 300, loaded fresh and into a run system, 60 frames equal, same bytes when saved again; run-ahead 120 frames x 2 ahead equal |
-| 7 | @@BRIEF_FAULTS@@ |
+| 7 | 48 seeded faults caught, 0 missed (28 by rung 2 (Covell's test or the probe card), 13 by rung 5, 1 by the smoke list, 5 by the unit tests, 1 by rung 6) |
 
 84,200 frames in 275 lockstep cases, none differing; the transcription was identical to the
 reference on its first run of every case (no divergence was ever found, so the per-cycle
@@ -206,7 +206,7 @@ that gate. No chip was ever debugged outside it.
 - `scripts/seeded_faults.py`, `scripts/state_roundtrip.py`, `scripts/bench.py`,
   `scripts/reference_notes.py`.
 - `external/refcache/`: the reference's traces (ignored by git). They take about 25 minutes
-  of 16 PyPy processes to make; with them the gate reruns in a few minutes.
+  of 16 PyPy processes to make; with them the whole gate (275 cases) reruns in half a minute.
 
 **Sockets, for the add-on crates** (README, "How an add-on crate plugs in"): every socket is a
 trait in `src/sockets.rs`. The decisions an add-on author should know:
@@ -224,5 +224,6 @@ trait in `src/sockets.rs`. The decisions an add-on author should know:
   itself).
 
 **Left for the session that started this**: repin `huc6280` from the path to a GitHub
-revision once both are pushed (CI builds only then); decide whether the two notes on the
-reference (README) go to pcengine-python as issues.
+revision once both are pushed (CI builds only then); decide whether the notes on the
+reference (README; `scripts/reference_notes.py` shows two of them on the reference itself) go
+to pcengine-python as issues.
