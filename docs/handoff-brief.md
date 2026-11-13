@@ -163,3 +163,66 @@ and runs by hand.
   speed, anything in the Python board that looked wrong, and what the fast fork and the browser
   page should know (the public API: building a board from card bytes, a frame's picture and
   palette, audio, pad input, save states and snapshots).
+
+## What was built (2026-11-12)
+
+Appended by the session that built it; the README is the fuller account. A later session can
+pick up from here and the repository alone.
+
+**State: all seven rungs pass.** Nothing was changed in pcengine-python, huc6280-python,
+huc6280-rust or 6502-rust; no `reference/` tree was opened; nothing is pushed and no GitHub
+repository exists.
+
+| Rung | Result |
+| --- | --- |
+| 1 | Covell's CPU test runs 60 frames (mclk 21,538,338, a picture every frame) |
+| 2 | the gate on Covell's test: identical (bus log, picture, audio, CPU state), first run |
+| 3 | 23 of 23 identical: the 18 picture-gate titles x 600 frames with pad input, the five PSG games x 900 |
+| 4 | smoke 20 of 20, then the library 179 of 179 and the Street Fighter II' card: identical, 300 frames each |
+| 5 | 71 of 71 identical; `switch_effect.py`: 37 of 37 switches and devices change at least one of their cases |
+| 6 | 18 of 18 titles: saved 148-2,477 instructions into frame 300, loaded fresh and into a run system, 60 frames equal, same bytes when saved again; run-ahead 120 frames x 2 ahead equal |
+| 7 | @@BRIEF_FAULTS@@ |
+
+84,200 frames in 275 lockstep cases, none differing; the transcription was identical to the
+reference on its first run of every case (no divergence was ever found, so the per-cycle
+narrowing has only been exercised by the seeded faults).
+
+**How it was built, where that differs from the brief.** The brief says to build the gate
+before the chips. The whole of `src/pcengine_python` (about 3,400 lines) was transcribed in one
+pass first, because Covell's test does not run 60 meaningful frames without the VDC's timing;
+rung 1 and the gate (rung 2) were then brought up together, and every later rung is cases of
+that gate. No chip was ever debugged outside it.
+
+**What is where** (the README's "Layout" has the rest):
+
+- `src/`: one file per reference module; `mt.rs` (Python's `random.Random`, for
+  `power_on_seed`), `trace.rs` (the gate's lines, `Setup`, `roundtrip`, `runahead`),
+  `fake_devices.rs` (the reference's test fakes and three devices a game can run on).
+- `scripts/pce_trace.py` / `src/bin/pce-trace.rs`: the two sides of the gate;
+  `scripts/lockstep.py`; `scripts/make_cases.py` writes `cases.tsv` and `smoke.txt`.
+- `scripts/make_probe.py`: a synthetic 8 KiB card (our own code, built into `scratch/`, never
+  committed) written so that every named switch and every socket changes something on it;
+  `scripts/switch_effect.py` checks that from the reference's traces.
+- `scripts/seeded_faults.py`, `scripts/state_roundtrip.py`, `scripts/bench.py`,
+  `scripts/reference_notes.py`.
+- `external/refcache/`: the reference's traces (ignored by git). They take about 25 minutes
+  of 16 PyPy processes to make; with them the gate reruns in a few minutes.
+
+**Sockets, for the add-on crates** (README, "How an add-on crate plugs in"): every socket is a
+trait in `src/sockets.rs`. The decisions an add-on author should know:
+
+- A device gets `&mut BoardPins` with every call (IRQ2, `hold`, the VDCs, the opcode, the
+  card), instead of the reference's `bind`.
+- The SuperGrafx's VPC is one `PixelPath` that also claims the VDC pages and reaches
+  `pins.vdcs` and `pins.opcode`; `LockstepPath` in `fake_devices.rs` is its skeleton.
+- The CD unit is one `PortDevice` that answers its own `audio_sources()` (CD-DA, ADPCM) and
+  reaches the System Card through `pins.card` and `Card::as_any_mut`; `LockstepPort` is its
+  skeleton.
+- Every socket trait carries `DeviceState`, so an add-on's devices and media enter a save
+  state; `state_identity()` is what refuses another disc.
+- `Board::reset` also resets the pixel path (the reference's SuperGrafx wrapper does that
+  itself).
+
+**Left for the session that started this**: repin `huc6280` from the path to a GitHub
+revision once both are pushed (CI builds only then); decide whether the two notes on the
+reference (README) go to pcengine-python as issues.

@@ -256,12 +256,6 @@ FAULTS = {
         "if channel.on() {",
         "R6 in DDA mode loads the latch only with the channel on (C16, Mednafen's way)",
     ),
-    "sample-boundary-exact": (
-        "psg/chip.rs",
-        "if self.phase >= per_sample - 1e-9 {",
-        "if self.phase > per_sample - 1e-9 {",
-        "a host sample ends only when the phase is past the boundary's tolerance",
-    ),
     # mixer.rs
     "mixer-rounds-half-away": (
         "mixer.rs",
@@ -325,11 +319,11 @@ FAULTS = {
         "",
         "a loaded state overwrites the system's own `underflow_window_mclk`",
     ),
-    "attach-does-not-deliver-the-lines": (
+    "no-reset-requested": (
         "system.rs",
-        "        cpu.bus.deliver_lines(Some(&mut cpu.pins), true);\n",
+        "        cpu.request_reset();\n",
         "",
-        "putting the CPU on the board does not hand it the interrupt lines",
+        "the CPU is put on the board without a reset: no start sequence, no reset vector",
     ),
     "seed-low-bits": (
         "mt.rs",
@@ -418,8 +412,11 @@ def main() -> int:
                 capture_output=True, text=True,
             )  # fmt: skip
             if tests.returncode:
-                failed = [line.split()[1] for line in tests.stdout.splitlines()
-                          if line.startswith("test ") and line.endswith("FAILED")]  # fmt: skip
+                # `cargo test --quiet` names a failed test under "failures:", indented
+                out = tests.stdout.splitlines()
+                failed = [line.strip() for n, line in enumerate(out)
+                          if line.startswith("    ") and " " not in line.strip()
+                          and "failures:" in out[:n]]  # fmt: skip
                 caught = f"tests: {failed[0] if failed else '?'}"
         if caught is None:
             for label, extra in LOCKSTEP_LATE:

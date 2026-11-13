@@ -12,8 +12,10 @@ What it does, by socket and switch:
 
 - **VDC**: display registers through ST0-ST2, tiles, a BAT and a sprite table through block
   transfers; 18 sprites on one line (overflow), sprite 0 over sprite 1 (collision), raster and
-  vblank interrupts whose status reads are in the bus log; a VRAM-to-VRAM DMA long enough to be
-  running when the display period starts (``dma_resumes``); VRAM read back while it runs.
+  vblank interrupts whose status reads are in the bus log; both scroll registers written all
+  the time from the main loop (so a write lands on every dot of a line sooner or later, the
+  latch dots among them); a VRAM-to-VRAM DMA read back while it runs, and another left running
+  into the display period (``dma_resumes``); a display height of more than 8 bits.
 - **VCE**: the three dot clocks and bit 2 (262 or 263 lines: ``lines_follow_vce_bit2``),
   palette writes and reads.
 - **Timer**: latch 0, enabled, its interrupt acknowledged, and `$0C00` polled in the main
@@ -140,6 +142,9 @@ def build() -> bytes:
     a.store(0x1000, 1)
     a.store(0x1000, 3)  # CLR high with SEL high: the multitap's counter resets
     a.lda_abs(0x1000)  # C10: what D3-D0 show while CLR is high
+    a.store(0x1000, 2)  # CLR stays high: not another pulse for a 6-button pad
+    a.store(0x1000, 3)  # SEL rises under CLR: the multitap must not count it
+    a.lda_abs(0x1000)
     for _ in range(5):
         a.store(0x1000, 1)
         a.lda_abs(0x1000)
@@ -152,6 +157,12 @@ def build() -> bytes:
     loop = a.here
     a.w(0xAE, 0x0C00)  # LDX $0C00
     a.w(0xAE, 0x1403)  # LDX $1403
+    a.w(0xEE, 0x2004)  # INC $2004: a changing value into both scroll registers, at any dot
+    a.w(0xAC, 0x2004)  # LDY $2004
+    a.b(0x03, 0x08)  # ST0 #8 (BYR)
+    a.w(0x8C, 0x0002)  # STY $0002
+    a.b(0x03, 0x07)  # ST0 #7 (BXR)
+    a.w(0x8C, 0x0002)  # STY $0002
     a.w(0xCD, 0x2000)  # CMP $2000
     a.b(0xF0, (loop - (a.here + 2)) & 0xFF)  # BEQ loop
     a.jsr(pads)
@@ -192,7 +203,7 @@ def build() -> bytes:
     a.tam(0x02, 0xF8)  # MPR1: work RAM at $2000 (zero page, stack)
     a.tam(0x04, 0x40)  # MPR2: bank $40 at $4000
     a.tam(0x08, 0x7F)  # MPR3: bank $7F at $6000
-    for address in (0x2000, 0x2001, 0x2002, 0x2003):
+    for address in (0x2000, 0x2001, 0x2002, 0x2003, 0x2004):
         a.stz(address)
     a.stz(0x0400)  # VCE: 5 MHz, bit 2 clear
     a.stz(0x0402)
@@ -341,7 +352,10 @@ def build() -> bytes:
     a.psg(3, 0x00)
     a.psg(8, 0x03)
     a.psg(9, 0x03)
-    frames(8)
+    frames(4)
+    a.psg(4, 0x1F)  # channel 1 keyed off and on under the LFO: its first period is modulated
+    a.psg(4, 0x9F)
+    frames(4)
     # C18: channel 2 off under the LFO
     a.psg(0, 1)
     a.psg(4, 0x1F)
@@ -360,7 +374,9 @@ def build() -> bytes:
     a.vdc(0x0B, 0x0627)
     a.vdc(0x07, 0x0041)
     a.vdc(0x08, 0x0023)
+    a.vdc(0x0D, 0x01EF)  # a display height past 8 bits: the sync cuts it short
     frames(8)
+    a.vdc(0x0D, 0x00EF)
     a.stz(0x0400)
     a.vdc(0x0A, 0x0202)
     a.vdc(0x0B, 0x041F)
