@@ -1,10 +1,13 @@
 //! The hardware page, bank $FF ($1FE000-$1FFFFF), as 32 pages of 256 bytes (`hardware_page.py`).
 //!
 //! [hw: pcetech 3]
-//!     $0000-$03FF  VDC   (4-byte mirror)       $0800-$0BFF  PSG   (in the CPU)
-//!     $0400-$07FF  VCE   (8-byte mirror)       $0C00-$0FFF  timer (2-byte mirror)
-//!     $1000-$13FF  I/O port                    $1400-$17FF  interrupt controller (4-byte mirror)
-//!     $1800-$1FFF  unmapped, reads $FF
+//!
+//! ```text
+//! $0000-$03FF  VDC   (4-byte mirror)       $0800-$0BFF  PSG   (in the CPU)
+//! $0400-$07FF  VCE   (8-byte mirror)       $0C00-$0FFF  timer (2-byte mirror)
+//! $1000-$13FF  I/O port                    $1400-$17FF  interrupt controller (4-byte mirror)
+//! $1800-$1FFF  unmapped, reads $FF
+//! ```
 //!
 //! The pages $1800-$1FFF are free for an add-on to claim (`CD` at $1800-$18FF, the Arcade Card at
 //! $1A00-$1AFF); the page table's claim replaces these handlers.

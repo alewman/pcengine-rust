@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Rung 7: seeded faults. One single-line fault at a time, each to be caught by a rung
+# (scripts/seeded_faults.py). Needs the reference cache a full gate run left.
+set -euo pipefail
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+python3 "$ROOT/scripts/seeded_faults.py" --jobs "${JOBS:-12}" "$@"
+echo "rung 7: passed"

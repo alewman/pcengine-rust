@@ -249,6 +249,7 @@ pub struct ScriptedCpu {
 }
 
 impl ScriptedCpu {
+    #[allow(clippy::field_reassign_with_default)] // `Pins` has private fields
     pub fn new(mut board: Board, high_speed: bool) -> ScriptedCpu {
         let mut pins = Pins::default();
         pins.high_speed = high_speed;

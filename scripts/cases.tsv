@@ -203,6 +203,7 @@ lib-World Sports Competition (USA)	300	$LIB/World Sports Competition (USA).7z	--
 lib-Yo' Bro (USA)	300	$LIB/Yo' Bro (USA).7z	--machine tg16 --press run@200+10
 lib-Zipang (Japan) (En)	300	$LIB/Zipang (Japan) (En).7z	--press run@200+10
 map-sf2	300	$SF2	--press run@200+10
+base-probe	120	$PROBE	
 sock-card-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --device lockstep-card --press run@200+10
 sock-card-probe	120	$PROBE	--device lockstep-card
 sock-port-lazers	300	$LIB/Blazing Lazers (USA).7z	--machine tg16 --device lockstep-port --press run@200+10
@@ -246,17 +247,17 @@ sw-psg-silent_units-probe	120	$PROBE	--psg silent_units=31
 sw-psg-render_audio-probe	120	$PROBE	--psg render_audio=false
 sw-psg-noise_zero_period-probe	120	$PROBE	--psg noise_zero_period=1
 sw-psg-noise_free_running-probe	120	$PROBE	--psg noise_free_running=false
-sw-seed-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --seed 1234 --press run@150+10
-sw-start-line-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --start-line 260 --press run@150+10
-sw-start-offset-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --start-offset 500 --press run@150+10
-sw-vblank-none-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vblank-dots none --press run@150+10
-sw-vblank-0-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vblank-dots 0 --press run@150+10
-sw-vertical-at-line-start-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vertical-at-line-start --press run@150+10
-sw-vertical-at-line-start-none-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vertical-at-line-start --vblank-dots none --press run@150+10
-sw-no-dma-resume-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --no-dma-resume --press run@150+10
-sw-timer-window-0-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --timer-window 0 --press run@150+10
-sw-timer-window-1-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --timer-window 1 --press run@150+10
-sw-no-bit2-lines-bonk	200	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --no-bit2-lines --press run@150+10
+sw-seed-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --seed 1234 --press run@200+10
+sw-start-line-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --start-line 260 --press run@200+10
+sw-start-offset-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --start-offset 500 --press run@200+10
+sw-vblank-none-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vblank-dots none --press run@200+10
+sw-vblank-0-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vblank-dots 0 --press run@200+10
+sw-vertical-at-line-start-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vertical-at-line-start --press run@200+10
+sw-vertical-at-line-start-none-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vertical-at-line-start --vblank-dots none --press run@200+10
+sw-no-dma-resume-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --no-dma-resume --press run@200+10
+sw-timer-window-0-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --timer-window 0 --press run@200+10
+sw-timer-window-1-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --timer-window 1 --press run@200+10
+sw-no-bit2-lines-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --no-bit2-lines --press run@200+10
 sw-psg-mame-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg-variant mame --press run@200+10
 sw-psg-mednafen-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg-variant mednafen --press run@200+10
 sw-psg-write_wave_while_playing-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg write_wave_while_playing=true --press run@200+10

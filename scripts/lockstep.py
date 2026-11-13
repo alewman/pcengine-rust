@@ -67,7 +67,12 @@ def safe_name(name: str) -> str:
 
 def cache_name(case: Case) -> str:
     name, frames, image, args = case
-    key = hashlib.sha1(repr((frames, Path(image).name, args)).encode()).hexdigest()[:10]
+    path = Path(image)
+    what: tuple = (frames, path.name, args)
+    if path.suffix.lower() not in (".7z", ".zip") and path.is_file():
+        # a loose image (Covell's test, the probe card this repository builds): by content
+        what += (hashlib.sha1(path.read_bytes()).hexdigest(),)
+    key = hashlib.sha1(repr(what).encode()).hexdigest()[:10]
     return f"{safe_name(name)}-{key}.ref"
 
 

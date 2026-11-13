@@ -4,9 +4,12 @@
 //! headings swap the VDC and VCE names: C1.)
 //!
 //! Registers ($FF:0400-07FF, 8-byte mirror):
-//!     $0 control (write only)    D7 monochrome, D2 blur / line count (C3), D1-D0 dot clock
-//!     $2/$3 colour address LSB/MSB (write only; 9 bits)
-//!     $4/$5 colour data LSB/MSB  (the address advances after the MSB, read or write)
+//!
+//! ```text
+//! $0 control (write only)    D7 monochrome, D2 blur / line count (C3), D1-D0 dot clock
+//! $2/$3 colour address LSB/MSB (write only; 9 bits)
+//! $4/$5 colour data LSB/MSB  (the address advances after the MSB, read or write)
+//! ```
 //!
 //! Everything else reads $FF. The palette is 512 entries of `-------GGGRRRBBB`.
 //!

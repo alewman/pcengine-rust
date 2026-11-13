@@ -17,6 +17,7 @@ Groups, by the name's prefix:
     psg-        rung 3: the five PSG games of docs/m4-record.md, 900 frames
     lib-        rung 4: every HuCard of the library, 300 frames from power-on with a RUN press
     map-        rung 4: the mapper cards outside the library
+    base-       rung 5: the synthetic probe card with every default (scripts/make_probe.py)
     sock-       rung 5: a test device in each socket
     mach-       rung 5: the machine rows
     sw-         rung 5: each named switch away from its default
@@ -129,6 +130,8 @@ def main() -> int:
             (f"lib-{title}", 300, f"$LIB/{title}.7z", f"{machine(title)} --press run@200+10".strip())
         )
     rows.append(("map-sf2", 300, "$SF2", "--press run@200+10"))
+    # the probe card with everything at its default: what the rung 5 cases are measured against
+    rows.append(("base-probe", 120, "$PROBE", ""))
 
     bonk = "$LIB/Bonk's Adventure (USA).7z"
     lazers = "$LIB/Blazing Lazers (USA).7z"
@@ -183,7 +186,7 @@ def main() -> int:
     for name, args in board:
         rows.append((f"sw-{name}-probe", 120, "$PROBE", args))
     for name, args in board[:11]:
-        rows.append((f"sw-{name}-bonk", 200, bonk, f"{tg} {args} --press run@150+10"))
+        rows.append((f"sw-{name}-bonk", 300, bonk, f"{tg} {args} {run}"))
     for name, args in board[11:]:
         rows.append((f"sw-{name}-aero", 300, aero, f"{tg} {args} {run}"))
     rows.append(("sw-timer-window-0-battle-royale", 300, "$LIB/Battle Royale (USA).7z",

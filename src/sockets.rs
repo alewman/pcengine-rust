@@ -129,6 +129,28 @@ impl BoardPins<'_> {
     }
 }
 
+/// A `BoardPins` with no board behind it: for a device's own tests (this crate's and an
+/// add-on's), which call its `read`, `write` and `catch_up` directly.
+#[derive(Default)]
+pub struct DetachedPins {
+    pub irq2: IrqLine,
+    pub held: i64,
+    pub vdcs: Vec<Vdc>,
+    pub opcode: u8,
+}
+
+impl DetachedPins {
+    pub fn pins(&mut self) -> BoardPins<'_> {
+        BoardPins {
+            irq2: &mut self.irq2,
+            held: &mut self.held,
+            vdcs: &mut self.vdcs,
+            opcode: self.opcode,
+            card: None,
+        }
+    }
+}
+
 /// What a save state needs of a socket's device (the reference walks the object graph).
 pub trait DeviceState {
     /// Everything of the device that changes as the console runs.

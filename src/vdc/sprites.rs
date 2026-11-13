@@ -57,7 +57,7 @@ pub fn scan(
         let y = (w0 & 0x3FF) as i64 - 64;
         let shape = ((w3 >> 12) & 3) as usize;
         let height = HEIGHTS[shape];
-        if !(y <= line && line < y + height) {
+        if !(y..y + height).contains(&line) {
             continue;
         }
         let wide = w3 & 0x100 != 0;
@@ -119,7 +119,7 @@ pub fn draw(entries: &[Entry], width: i64, row: &mut [u16], first: usize) -> Opt
         let [p0, p1, p2, p3] = entry.planes;
         for x in 0..16i64 {
             let column = entry.x + x;
-            if !(0 <= column && column < width) {
+            if !(0..width).contains(&column) {
                 continue;
             }
             let bit = if entry.hflip { x } else { 15 - x };

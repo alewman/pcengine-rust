@@ -3,9 +3,12 @@
 //! Instances, not module state: a SuperGrafx has two, a PC-FX may one day pin this module.
 //!
 //! Bus ($FF:0000-03FF, 4-byte mirror) [hw: pcetech 5]:
-//!     $0  write: register select (low 5 bits); read: status
-//!     $1  unused, reads 0
-//!     $2  data LSB     $3  data MSB
+//!
+//! ```text
+//! $0  write: register select (low 5 bits); read: status
+//! $1  unused, reads 0
+//! $2  data LSB     $3  data MSB
+//! ```
 //!
 //! Provisional (U1, tier 5): the VDC's CPU access schedule in active display. Hudson's table and
 //! MacDonald's give the mode-0 slot order (CPU, BAT, CPU, ?, CPU, CG0, CPU, CG1) but not the
@@ -16,9 +19,7 @@
 //!
 //! Differences forced by Rust: the reference's `hold` callable (the board's) is an accumulator
 //! here, `held`, which the board takes when the access returns (`take_hold`): the reference's
-//! board applies its own sum at the same point. A row the reference's slice assignment would
-//! leave with a length other than the line's (a display start past the row's end) is left as
-//! the overscan row `pixel_row` returns for it there.
+//! board applies its own sum at the same point.
 
 use serde::{Deserialize, Serialize};
 
@@ -285,9 +286,9 @@ impl Vdc {
         let divider = seq.divider;
         let end = (first + width).min(dots as i64);
         if first >= end {
-            // The display starts at or past the end of the row: nothing of it shows. (The
-            // reference's slice assignment may leave a row of another length here, which
-            // `pixel_row` answers with the overscan row; no sprite pixel can land either.)
+            // Not reachable: a display start at or past the row's end is later than the next
+            // line's sync, which drops this line's events before `render_line` runs
+            // (sequencer.rs, `seq_leave_hsync`). Kept so the slices below cannot panic.
             self.row = Some(row);
             return;
         }
@@ -473,7 +474,7 @@ impl Vdc {
     /// Earliest time at or after `mclk` that the CPU owns a VRAM slot (U1, provisional).
     pub fn slot_time(&self, mclk: i64) -> i64 {
         let seq = &self.seq;
-        if !(seq.active_display() && seq.active_start <= mclk && mclk < seq.active_end) {
+        if !(seq.active_display() && (seq.active_start..seq.active_end).contains(&mclk)) {
             return mclk;
         }
         let div = seq.divider;

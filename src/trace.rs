@@ -161,7 +161,7 @@ pub fn parse_press(spec: &str) -> Result<Press, String> {
 pub fn held(presses: &[Press], frame: i64) -> u16 {
     presses
         .iter()
-        .filter(|press| press.start <= frame && frame < press.start + press.hold)
+        .filter(|press| (press.start..press.start + press.hold).contains(&frame))
         .fold(0, |mask, press| mask | press.mask)
 }
 
@@ -196,9 +196,10 @@ impl Setup {
     /// [--start-offset N] [--vblank-dots N|none] [--vertical-at-line-start] [--no-dma-resume]
     /// [--psg NAME=VALUE]... [--psg-variant NAME] [--timer-window N] [--no-bit2-lines]
     /// [--device NAME] [--detail FRAME] [--out FILE]`
-    pub fn parse(args: &[String]) -> Result<Setup, String> {
-        let mut setup = Setup {
-            image: Vec::new(),
+    /// The reference's defaults around a card image.
+    pub fn for_image(image: Vec<u8>) -> Setup {
+        Setup {
+            image,
             machine: "pce".to_string(),
             frames: 60,
             presses: Vec::new(),
@@ -215,7 +216,11 @@ impl Setup {
             detail: None,
             out: None,
             rest: Vec::new(),
-        };
+        }
+    }
+
+    pub fn parse(args: &[String]) -> Result<Setup, String> {
+        let mut setup = Setup::for_image(Vec::new());
         let mut path = None;
         let mut iter = args.iter();
         let number = |text: &String| -> Result<i64, String> {
@@ -386,4 +391,115 @@ pub fn set_psg_switch(
         _ => return Err(format!("no PSG switch {name}")),
     }
     Ok(())
+}
+
+/// Run `frames` frames with the setup's presses; a line a frame.
+pub fn run_frames(setup: &Setup, system: &mut System, frames: i64) -> Vec<String> {
+    (0..frames)
+        .map(|_| {
+            setup.apply_presses(system);
+            system.run_frame();
+            frame_line(system)
+        })
+        .collect()
+}
+
+fn started(setup: &Setup) -> Result<System, String> {
+    let mut system = setup.build()?;
+    system.board_mut().bus_log = Some(Vec::new());
+    Ok(system)
+}
+
+fn settle(system: &mut System) {
+    if let Some(log) = system.board_mut().bus_log.as_mut() {
+        log.clear();
+    }
+    system.board_mut().take_audio();
+}
+
+/// Save states, proven complete (the reference's `scripts/state_roundtrip.py` `roundtrip`):
+/// power on, run to frame `at` plus `extra` instructions (so the save falls anywhere in a
+/// frame, between two instructions), save, then build a second system the same way, load the
+/// state into it, and run both to frame `to`. Every frame after the save must be the same on
+/// both, by the gate's own lines. A third run loads the state into a system that has run
+/// elsewhere first (to frame `at` / 2); and the loaded system, saved at once, must give the
+/// same bytes back. `Ok` says what was compared, `Err` what differed.
+pub fn roundtrip(setup: &Setup, at: i64, to: i64, extra: i64) -> Result<String, String> {
+    use crate::state::{load_state, save_state};
+    let mut first = started(setup)?;
+    run_frames(setup, &mut first, at);
+    for _ in 0..extra {
+        first.step();
+    }
+    let state = save_state(&first);
+    settle(&mut first);
+    let expected = run_frames(setup, &mut first, to - at);
+    for (label, warm) in [
+        ("a fresh system", 0),
+        ("a system that had run", 1.max(at / 2)),
+    ] {
+        let mut second = started(setup)?;
+        run_frames(setup, &mut second, warm);
+        load_state(&mut second, &state).map_err(|error| format!("{label}: {error}"))?;
+        if save_state(&second) != state {
+            return Err(format!(
+                "{label}: saved again at once, the state is not the same bytes"
+            ));
+        }
+        settle(&mut second);
+        let got = run_frames(setup, &mut second, to - at);
+        for (n, (a, b)) in expected.iter().zip(&got).enumerate() {
+            if a != b {
+                return Err(format!(
+                    "{label}: differs in frame {} after the save\n  expected {a}\n  got      {b}",
+                    n + 1
+                ));
+            }
+        }
+    }
+    Ok(format!(
+        "{} bytes; {} frames after the save equal, twice",
+        state.len(),
+        to - at
+    ))
+}
+
+/// The snapshot pair in a run-ahead pass: every frame is run, a snapshot taken, `ahead` more
+/// frames run with other buttons held, and the snapshot put back. Each frame's line, and the
+/// state at the end, must equal those of a run that never looked ahead.
+pub fn runahead(setup: &Setup, frames: i64, ahead: i64) -> Result<String, String> {
+    use crate::state::{load_snapshot, save_snapshot, save_state};
+    let mut plain = started(setup)?;
+    let expected = run_frames(setup, &mut plain, frames);
+    let mut system = started(setup)?;
+    let mut bytes = 0;
+    for (n, wanted) in expected.iter().enumerate() {
+        setup.apply_presses(&mut system);
+        system.run_frame();
+        let line = frame_line(&mut system);
+        if &line != wanted {
+            return Err(format!(
+                "frame {} differs after a snapshot was put back\n  expected {wanted}\n  got      {line}",
+                n + 1
+            ));
+        }
+        let snapshot = save_snapshot(&system);
+        bytes = snapshot.len();
+        for _ in 0..ahead {
+            system
+                .board_mut()
+                .set_pressed(0, pads::RUN | pads::I | pads::RIGHT);
+            system.run_frame();
+        }
+        load_snapshot(&mut system, &snapshot)?;
+        if let Some(log) = system.board_mut().bus_log.as_mut() {
+            log.clear();
+        }
+    }
+    if save_state(&system) != save_state(&plain) {
+        return Err("the end state is not the plain run's".to_string());
+    }
+    Ok(format!(
+        "{frames} frames, {ahead} ahead of each, equal to the plain run; a snapshot is {bytes} bytes"
+    ))
 }

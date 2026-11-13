@@ -15,11 +15,13 @@
 //! Horizontal events within a line (dot = the VCE's dot divider in master clocks, measured from the
 //! VCE's hsync start at the line's origin):
 //!
-//!     origin + 237            hsync ends (`HSYNC_CLOCKS`, emu)
-//!     + 8 dots                HDS: the display-start phase begins; a pending line counter step
-//!                             from the previous line is taken here if not yet done
-//!     + (HDS + 1) * 8 dots    HDW: the display width begins; vblank flag test, sprite scan (M3)
-//!     + (HDW + 1) * 8 - 4     HDW final: the line counter steps (RCR compare, phase counters)
+//! ```text
+//! origin + 237            hsync ends (`HSYNC_CLOCKS`, emu)
+//! + 8 dots                HDS: the display-start phase begins; a pending line counter step
+//!                         from the previous line is taken here if not yet done
+//! + (HDS + 1) * 8 dots    HDW: the display width begins; vblank flag test, sprite scan (M3)
+//! + (HDW + 1) * 8 - 4     HDW final: the line counter steps (RCR compare, phase counters)
+//! ```
 //!
 //! Differences forced by Rust: `Sequencer` is the state; its methods are `impl Vdc` here, with
 //! the reference's names behind `seq_` (the reference's sequencer calls back into the chip
@@ -40,7 +42,7 @@ pub enum VPhase {
 }
 
 impl VPhase {
-    fn next(self) -> VPhase {
+    fn following(self) -> VPhase {
         match self {
             VPhase::Vsw => VPhase::Vds,
             VPhase::Vds => VPhase::Vdw,
@@ -323,7 +325,7 @@ impl Vdc {
         self.seq.vphase_counter -= 1;
         self.seq.scanline_from_vsync += 1;
         if self.seq.vphase_counter <= 0 {
-            self.seq.vphase = self.seq.vphase.next();
+            self.seq.vphase = self.seq.vphase.following();
             if self.seq.vphase == VPhase::Vcr {
                 self.display_ended();
             }

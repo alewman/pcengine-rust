@@ -99,7 +99,7 @@ impl PageTable {
         last_page: usize,
         handler: Handler,
     ) -> Result<(), String> {
-        if !(first_page <= last_page && last_page < PAGE_COUNT) {
+        if first_page > last_page || last_page >= PAGE_COUNT {
             return Err(format!(
                 "page range {first_page:#x}-{last_page:#x} outside 0-{PAGE_COUNT:#x}"
             ));
