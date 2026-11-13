@@ -1,0 +1,122 @@
+//! The HuC6280's 7-bit timer ($0C00-$0FFF, mirrored every 2 bytes) (`cpu_io/timer.py`).
+//!
+//! [hw: pcetech 2.2] One tick per 1024 high-speed CPU cycles (master/3072) whatever the CPU speed.
+//! `$0C00` is a latch (0 counts as 1, $7F as 128); `$0C01` bit 0 enables. The interrupt line is
+//! asserted when the counter goes from 0 to $7F; at that moment it is reloaded from the latch and
+//! keeps counting, whether or not the interrupt has been acknowledged.
+//!
+//! [mfr: HuC6280 hardware manual 2.7] "When 0 is written in the Timer Start/Stop flag, the timer
+//! stops and the prescaler is reset", and the down-counter is loaded from the reload register when the
+//! flag goes from 0 to 1. So a tick is one full prescaler period (1024 cycles of master/3, 3072 master
+//! clocks) after the enabling write, and a stop and restart always begin a fresh period (U24, closed
+//! as far as the sources go: tier 3 for the reset, the full first period follows from it; what stays
+//! tier 5 is Mednafen's one-clock-late reload after an underflow, which MAME does not have, and
+//! this model follows pcetech 2.2's "reloaded when it occurs"). The manual also cautions that the
+//! count can read invalid while it changes; that is not modelled.
+//!
+//! C25 (M5 sweep, Battle Royale): the count is visible as $7F for a short window after an underflow
+//! before the reload shows. Battle Royale programs a latch of 0 and polls `$0C00` until it reads
+//! non-zero, so with an instant reload it never leaves the poll (black screen; both detectors run it).
+//! pcetech 2.2's "goes from 0 to $7F" is the same statement. The window is `underflow_window_mclk`:
+//! 15 master clocks (Mesen2's `Scaler <= 5 * 3`, a comment there names this game) is the default [emu,
+//! tier 5]; Mednafen's is 1 master clock (`timer_inreload`), 0 is the instant reload of the first
+//! model. The width is not measured on hardware.
+
+use serde::{Deserialize, Serialize};
+
+pub const TICK_CLOCKS: i64 = 1024 * 3;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Timer {
+    /// C25: master clocks for which the count reads $7F after an underflow (see the module doc).
+    /// A switch, not state: a loaded state keeps the system's own.
+    pub underflow_window_mclk: i64,
+    /// [hw: pcetech 2] power-up: count 0, disabled
+    pub latch: u8,
+    pub count: u8,
+    pub enabled: bool,
+    /// the TIQ line: held until $1403 is written
+    pub irq: bool,
+    next_tick: i64,
+    window_end: i64,
+}
+
+impl Default for Timer {
+    fn default() -> Self {
+        Timer::new()
+    }
+}
+
+impl Timer {
+    pub fn new() -> Timer {
+        Timer {
+            underflow_window_mclk: 15,
+            latch: 0,
+            count: 0,
+            enabled: false,
+            irq: false,
+            next_tick: 0,
+            window_end: 0,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.latch = 0;
+        self.count = 0;
+        self.enabled = false;
+        self.irq = false;
+        self.window_end = 0;
+    }
+
+    pub fn catch_up(&mut self, mclk: i64) {
+        while self.enabled && self.next_tick <= mclk {
+            self.next_tick += TICK_CLOCKS;
+            if self.count == 0 {
+                // 0 -> $7F underflow: assert the line, reload from the latch (pcetech 2.2).
+                self.irq = true;
+                self.count = self.latch;
+                self.window_end = self.next_tick - TICK_CLOCKS + self.underflow_window_mclk;
+            } else {
+                self.count -= 1;
+            }
+        }
+    }
+
+    /// Master-clock time of the next underflow, or None while disabled.
+    pub fn next_event(&self) -> Option<i64> {
+        if !self.enabled {
+            return None;
+        }
+        Some(self.next_tick + self.count as i64 * TICK_CLOCKS)
+    }
+
+    pub fn read(&mut self, buffer: u8, mclk: i64) -> u8 {
+        self.catch_up(mclk);
+        // Bit 7 returns the I/O buffer; the low seven bits are the live count.
+        if mclk < self.window_end {
+            return 0x7F | (buffer & 0x80); // C25: $7F before the reload shows
+        }
+        self.count | (buffer & 0x80)
+    }
+
+    pub fn write(&mut self, offset: u32, value: u8, mclk: i64) {
+        self.catch_up(mclk);
+        if offset & 1 == 0 {
+            // The latch only; the running count is untouched until the next reload.
+            self.latch = value & 0x7F;
+        } else {
+            let enable = value & 1 != 0;
+            if enable && !self.enabled {
+                // Disabled -> enabled: reload from the latch, restart the prescaler (U24).
+                self.count = self.latch;
+                self.next_tick = mclk + TICK_CLOCKS;
+            }
+            self.enabled = enable;
+        }
+    }
+
+    /// [hw: pcetech 2.1] any write to $1403 acknowledges the timer.
+    pub fn acknowledge(&mut self) {
+        self.irq = false;
+    }
+}
