@@ -1,0 +1,154 @@
+# Handoff brief: pcengine-rust
+
+## The request
+
+Aubrey, 2026-11-12, after the PC Engine family's Python release: "get our rust version and rust
+fast and the play-pce site ready." The order (megadrive, a2600 and famicom precedent):
+
+1. huc6280-rust: the CPU core (`/data/emu/huc6280-rust`, transcribed from huc6280-python v0.3.0).
+2. **pcengine-rust** (this repository): the board.
+3. pcengine-rust-fast: the ladder-gated speed fork, with the SDL2 window (`pce-play`).
+4. play-pce: the fast board in the browser (wasm), like play-2600 and play-nes.
+
+## What it is
+
+A Rust PC Engine / TurboGrafx-16 board **transcribed from**
+[pcengine-python](https://github.com/alewman/pcengine-python) at **`v0.1.0`**
+(`bc9b976f8b6ba29ff16fdcbd527978899d7e54b4`; local clone `/data/emu/pcengine-python`) and proven
+equivalent to it: every CPU bus cycle (physical address, value, kind, master clock), every frame's
+picture at the 9-bit palette value, every mixed audio sample. pcengine-python is the specification:
+readable, cited, judged against Mesen2, Beetle PCE, Mednafen and Covell's photographs; this board
+adds nothing and tunes nothing.
+
+The CPU is `/data/emu/huc6280-rust` (crate `huc6280`): depend on it by path while it is local
+(`huc6280 = { path = "../huc6280-rust" }`), and say so in the README; the session that started you
+repins it to a GitHub revision once both are pushed. Read its README's "for a board author"
+section for the `Bus` trait, the interrupt lines and `high_speed`.
+
+Crate `pcengine_rust`, package `pcengine-rust`, edition 2021, MIT, `publish = false`.
+
+## Read before writing any Rust, in this order
+
+1. pcengine-python `README.md`, `docs/start-here.md` (the machines, the clocks, the module shape,
+   save states), `docs/sockets.md` (the twelve sockets add-ons plug into).
+2. `docs/memory-map.md`, `docs/vdc.md`, `docs/vce.md`, `docs/psg.md`, `docs/cartridge.md`.
+3. The milestone records `docs/m1-record.md` to `docs/m5-record.md` for what each named switch
+   (the U and C entries) is and why its default is what it is.
+4. `src/pcengine_python/` module by module: `machine.py`, `sockets.py`, `pagetable.py`,
+   `hardware_page.py`, `board.py`, `system.py`, `cpu_io/`, `vce.py`, `video.py`, `vdc/` (regs,
+   chip, sequencer, background, sprites, dma), `psg/chip.py`, `mixer.py`, `cards.py`, `pads.py`,
+   `state.py`.
+5. For the Rust shape of a board on a `sixfiveohtwo`-family core: `/data/emu/a2600-rust` (small)
+   and `/data/emu/famicom-rust` (large, with `state.rs` save states), their `scripts/` (the
+   lockstep gate, the reference trace script, `make_cases.py`, the seeded faults) and READMEs.
+
+## What to transcribe
+
+Module for module, with the same names, **every named switch as a field with the Python default**
+(the class attributes and constructor arguments: `vblank_dots`, `vertical_at_line_start`,
+`dma_resumes`, `power_on_seed`, `start_line`, the VDC's and PSG's U/C switches and `VARIANTS`, the
+timer's `underflow_window_mclk`, ...), and the comments that cite a source carried over.
+
+- The machine table (PC Engine, TurboGrafx-16; keep `vdc_count` so the SuperGrafx row can exist).
+- The board: one timeline in master clocks, the bus callbacks that price each cycle, `hold`, the
+  interrupt lines; the page table (8192 pages); the hardware page decode.
+- `cpu_io`: timer, interrupt registers, I/O port, I/O buffer. The pads: 2-button, 6-button, multitap.
+- The VCE, the frame timeline and the line capture; the VDC (all of `vdc/`); the PSG; the mixer.
+- The cards: ROM with mirroring, Street Fighter II', Populous, Tennokoe; `make_card` detection.
+- **The sockets as traits** (`Card`, `PortDevice`, `ControllerPort`, `PixelPath`, `AudioSource`,
+  `IrqLine`, ...): the SuperGrafx and the CD unit are later crates that plug into them exactly as
+  supergrafx-python and pcenginecd-python plug into the Python board. Do not design them away; do
+  not build the add-ons here.
+- **Save states** (`state.py`): `save_state`/`load_state` for the Rust board. The format is the
+  Rust board's own (serde; see famicom-rust's `state.rs`), not the Python JSON: what must hold is
+  the Python board's *property*, a saved and loaded run continues bit for bit, and its refusals
+  (another card by its hash, another machine). Also a cheap in-memory snapshot pair
+  (`save_snapshot`/`load_snapshot`, no hashing or compression) for run-ahead in the browser, as
+  famicom-rust has.
+
+Not transcribed: the Python scripts that drive Mesen2, Beetle PCE, MAME and Mednafen; the picture
+comparisons against them. The Python board has already been judged against those; this board is
+judged against the Python board.
+
+## The ladder (do not reorder)
+
+Each rung has `scripts/rungN.sh` and passes only when its output says so.
+
+1. **Skeleton**: board + huc6280-rust + a plain ROM card; Covell's CPU test
+   (`/data/emu/pcengine-python/tests/test_roms/CPU_Test/CPU_Test_10.pce`, fetched there, read in
+   place) runs 60 frames.
+2. **The lockstep gate, built first and kept as the arbiter**: `scripts/pce_trace.py` runs the
+   Python board (PyPy, from a checkout at the pin under `external/`, fetched by
+   `scripts/fetch_pcenginepython.sh`) and writes, per frame, digests of the CPU bus log (physical
+   address, value, kind, master clock: pcengine-python's `scripts/state_roundtrip.py` `observe()`
+   shows the tap), of the picture (`capture.last_frame` rows and dividers), of the mixed audio
+   (`board.take_audio()`) and of the CPU state; a Rust binary `pce-trace` writes the same lines;
+   `scripts/lockstep.py` runs `scripts/cases.tsv` and reports the first differing frame, then
+   narrows to the first differing bus cycle with a per-cycle mode. A reference-trace cache
+   (`--reference-cache external/refcache`) so a rerun costs only the Rust side, as a2600-rust has.
+   Pad input per case in pcengine-python's press spelling (`run@400+10`, `scripts/presses.py`).
+3. **Picture and sound**: the 18 picture-gate titles of pcengine-python `docs/m3-record.md`
+   (27 pictures: the list with frame counts is in that record; US cards as TurboGrafx-16) and the
+   five PSG games of `docs/m4-record.md`, identical picture for picture and sample for sample,
+   600 frames each with pad input.
+4. **The library**: every HuCard of `/data/emu/roms-retrobat/pcengine/` (179 `.7z`, read in place;
+   extract one at a time into `scratch/`, remove after; BYOR, never commit), 300 frames from
+   power-on plus a RUN press, in lockstep by frame digest. Smoke first (a curated 20: the 9 cards
+   pcengine-python `docs/m5-record.md` lists as different from Mesen2, the mapper cards, the
+   6-button and multitap users if any, and classics), the full 179 only when the smoke is clean.
+   The Street Fighter II' card is read in place from the path in pcengine-python
+   `docs/cartridge.md`.
+5. **Machines and switches**: the TurboGrafx-16 row, a `power_on_seed`, and each named switch in
+   its non-default position on at least one case (the gate proves the switch is wired, not that
+   it is right).
+6. **Save states**: the round trip of pcengine-python `scripts/state_roundtrip.py` on the Rust
+   board (saved mid-frame, loaded into a fresh board and into one that had run, 60 frames equal by
+   the same digests; the loaded board saved at once gives the same bytes) on the 18 titles, the
+   refusals as unit tests, and the snapshot pair in a run-ahead pass (run a frame, snapshot, run
+   n ahead, load: the end state equals the plain run's).
+7. **Seeded faults**: at least 20 single-line faults across the modules, each caught by a rung; a
+   fault that changes no behaviour is not a fault. Report which rung caught each.
+
+Speed is not a goal here (the fast fork's job) but measure it: frames per second on three titles
+against the Python board on PyPy.
+
+CI (`.github/workflows/ci.yml`, small: main and pull requests, concurrency cancel): `cargo fmt
+--check`, `cargo clippy --release --all-targets -- -D warnings`, `cargo test --release`, and what
+of the ladder needs no ROM (rung 1 if Covell's test can be fetched by the Python repository's pin;
+unit tests of state refusals and mappers on synthetic images). The lockstep gate needs the library
+and runs by hand.
+
+## Traps the Python board has already paid for
+
+- **The board prices every cycle inside the bus callback** (12 master clocks at low speed, 3 at
+  high, plus the VDC/VCE stretch and any `hold`); `step()`'s return is never added to the clock.
+- **One master-clock timeline.** The VDC, VCE, timer and PSG catch up to the clock at an access;
+  the order of catch-ups inside a cycle is what the lockstep with Mednafen settled. Keep it.
+- **Python arithmetic.** Floor division and modulo of negatives, `round` (ties to even), floats
+  in the mixer (`carry`, gains, `_clip`): transcribe the arithmetic exactly (a2600-rust's
+  `py_floordiv` and `round_ties_even` are the precedent). Audio must be sample for sample.
+- **Dict and attribute order do not exist in Rust**; where the Python walks a dict (the page
+  table claims, the mixer's sources) keep the same order explicitly.
+- **PyPy's 80-attribute limit** shaped some Python classes; do not copy the workaround, and do
+  not "tidy" the Python side.
+- The mixer's lanes are kept by source position (v0.1.0), and `_Lane` is a dataclass.
+
+## Rules (Aubrey's)
+
+- The Python board is the spec. If you think it is wrong, stop, show the divergence and its
+  judge, and report it; it is fixed in pcengine-python, then repinned. Do not modify
+  pcengine-python, huc6280-python, huc6280-rust or 6502-rust.
+- **No GPL or LGPL code, copied or transcribed** (pcengine-python `docs/provenance.md`): the only
+  sources you transcribe are pcengine-python and huc6280-python, which are ours and MIT. Do not
+  open the emulator trees under any `reference/` directory for this work.
+- Never commit ROMs, traces or BIOS. Runs must not write into the library folders.
+- At most 16 processes, `nice`; PyPy at `~/.local/opt/pypy3.11-v7.3.20-linux64/bin/pypy3.11` with
+  `PYPY_GC_NURSERY=1M`; kill by PID, never pkill. No `sed -i`, `rm -rf` or `ln -sfn` one-liners:
+  small Python helpers. Temp files under `external/`, `target/` or `scratch/` (gitignored).
+- Smoke before full sweeps.
+- Commits locally at good points, trailer `Co-Authored-By: Claude Fable 5.2
+  <noreply@anthropic.com>`. **Do not create a GitHub repository and do not push.**
+- Report at the end: each rung with numbers, the faults table, the Rust-forced differences,
+  speed, anything in the Python board that looked wrong, and what the fast fork and the browser
+  page should know (the public API: building a board from card bytes, a frame's picture and
+  palette, audio, pad input, save states and snapshots).
