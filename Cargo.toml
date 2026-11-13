@@ -6,6 +6,7 @@ rust-version = "1.85"
 description = "A Rust PC Engine / TurboGrafx-16 board transcribed from, and proven equivalent to, pcengine-python"
 license = "MIT"
 repository = "https://github.com/alewman/pcengine-rust"
+readme = "README.md"
 publish = false
 
 [lib]
