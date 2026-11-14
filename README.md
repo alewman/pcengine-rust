@@ -46,7 +46,7 @@ frame:
 | 4 | The library: every HuCard, 300 frames from power-on with a RUN press | 180 of 180 identical (179 cards and the Street Fighter II' card) |
 | 5 | A test device in every socket, the machine rows crossed, each named switch away from its default | 71 of 71 identical; 37 of 37 switches and devices change at least one case |
 | 6 | Save states: round trip and run-ahead on the 18 titles | 18 of 18, twice each; run-ahead equal on all 18; a 0.1.0 state refused |
-| 7 | Seeded faults | 48 caught, 0 missed |
+| 7 | Seeded faults | 56 caught, 0 missed (eight new, on what 0.2.0 carries) |
 
 In all, **84,200 frames in 275 lockstep cases, and no case has ever
 differed**: the transcription was identical to the reference on the first run
@@ -240,7 +240,7 @@ the reference on PyPy 7.3.20 (Python 3.11, `PYPY_GC_NURSERY=1M`):
 | 4 | The library: every HuCard, 300 frames from power-on with a RUN press, and the Street Fighter II' card; the smoke list of 20 first | smoke 20 of 20; then 180 of 180 identical (the 179 cards and Street Fighter II'): 54,000 frames | `rung4.sh` |
 | 5 | Machines, sockets and switches: a test device in every socket, the machine rows crossed, a power-on seed, each named switch away from its default; and which case each one changes | 71 of 71 identical (14 socket cases, 3 machine cases, 53 switch cases, the probe's baseline); 37 of 37 switches and devices change at least one of their cases; `tests/sockets.rs` 17 tests, `tests/pads.rs` 12 | `rung5.sh` |
 | 6 | Save states: the round trip and the run-ahead pass on the 18 titles; the refusals (a real 0.1.0 state among them), the wiring kept, and the synthetic-card round trip as unit tests | 18 of 18 titles equal, twice each; run-ahead equal on all 18; 10 unit tests | `rung6.sh` |
-| 7 | Seeded faults: one single-line fault at a time in a copy of `src/`, run through the checks cheapest first until one fails | 48 caught, 0 missed ([docs/seeded-faults.md](docs/seeded-faults.md)) | `rung7.sh` |
+| 7 | Seeded faults: one single-line fault at a time in a copy of `src/`, run through the checks cheapest first until one fails | 56 caught, 0 missed: the 48 of 0.1.0 and eight on the VDC wait, the level table and the new CPU state field ([docs/seeded-faults.md](docs/seeded-faults.md)) | `rung7.sh` |
 
 **The gate** (`scripts/lockstep.py`) runs each case of `scripts/cases.tsv`
 on both boards: `scripts/pce_trace.py` on the reference's interpreter and
