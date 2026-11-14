@@ -8,7 +8,7 @@ Follows pcengine-python 0.2.0 (`4c32f26`) and its core, huc6280-python 0.4.0 (`2
 
 - **CPU core: huc6280-rust 0.2.0** (`43e5978`, huc6280-python's issue 0005: the poll keeps the
   lines it saw). `CpuState` gained `polled_irq_lines: Option<u8>`; the gate's CPU text carries it.
-  Until huc6280-rust 0.2.0 is on GitHub the dependency is by path (`../huc6280-rust`).
+  huc6280-rust 0.2.0 by its GitHub revision.
 - **The board's own events run while the CPU waits on a VDC access** (the reference's issue 0004
   item 1): a VRAM DMA the CPU waits on now meets the display start, paused (C7, the default) or
   cancelled (`dma_resumes = false`, which serves the access there). `Board::step`, `settle` and
