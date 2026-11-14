@@ -225,7 +225,7 @@ two-VDC decode made again after a wait).
 | What | Version |
 | --- | --- |
 | pcengine-python (the reference) | `v0.2.0`, `4c32f26730eb2a95041ec62547f977f97d2ab696` (0.1.0 was proven against `v0.1.0`, `bc9b976`) |
-| huc6280-rust (`huc6280`) | `43e5978` (0.2.0, from huc6280-python `v0.4.0`, `265df88`, the revision the reference pins), by path until it is on GitHub; `Cargo.toml` |
+| huc6280-rust (`huc6280`) | `43e5978` (0.2.0, from huc6280-python `v0.4.0`, `265df88`, the revision the reference pins), by its GitHub revision in `Cargo.toml` |
 | The HuCard library | 179 `.7z` images (the user's), and the Street Fighter II' card of the reference's `docs/cartridge.md` |
 | Covell's CPU test | `CPU_Test.zip`, SHA-256 `db65a32d…6c937b625` (the reference's pin) |
 
@@ -263,7 +263,7 @@ state checks are described in [docs/ladder.md](docs/ladder.md).
 
 ```text
 scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at v0.2.0, with a PyPy venv
-                                        # (CORE_SOURCE=a huc6280-python clone while its pin is not on GitHub)
+                                        # (CORE_SOURCE=a local huc6280-python clone, optional)
 scripts/fetch_covell.sh                 # Covell's CPU test by the reference's pin, into external/covell
 scripts/make_cases.py                   # scripts/cases.tsv and smoke.txt from the library's names
 scripts/rung1.sh [CPU_Test_10.pce]
