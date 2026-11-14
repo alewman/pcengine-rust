@@ -1,16 +1,16 @@
 # pcengine-rust
 
 A Rust **PC Engine / TurboGrafx-16** board transcribed from
-[pcengine-python](https://github.com/alewman/pcengine-python) at the tag
-`v0.1.0` (`bc9b976`) and proven equivalent to it: every CPU bus cycle
+[pcengine-python](https://github.com/alewman/pcengine-python) at `v0.2.0`
+(`4c32f26`) and proven equivalent to it: every CPU bus cycle
 (physical address, value, kind, master clock), every frame's picture at the
 9-bit palette value, every mixed audio sample and the CPU's state, frame by
 frame, on the whole HuCard library. pcengine-python is the specification
 (readable, cited, judged against Mesen2, Beetle PCE, Mednafen and Covell's
 photographs); this board adds nothing and tunes nothing. Its CPU is
 [huc6280-rust](https://github.com/alewman/huc6280-rust) (crate `huc6280`,
-transcribed from huc6280-python `v0.3.0`, the revision pcengine-python
-`v0.1.0` pins). The add-ons
+transcribed from huc6280-python `v0.4.0`, the revision pcengine-python
+`v0.2.0` pins). The add-ons
 [supergrafx-rust](https://github.com/alewman/supergrafx-rust) and
 [pcenginecd-rust](https://github.com/alewman/pcenginecd-rust) plug into its
 socket traits, and
@@ -33,8 +33,10 @@ traits, and save states.
 
 ## Status
 
-**2026-11-13: built (2026-11-12); all seven rungs pass.** Every rung compares
-this board with the reference, frame by frame:
+**2026-11-13: 0.2.0, following pcengine-python `v0.2.0` (its issue 0004
+settled) and huc6280-rust 0.2.0; all seven rungs pass against the new
+reference.** Every rung compares this board with the reference, frame by
+frame:
 
 | Rung | What | Result |
 | --- | --- | --- |
@@ -43,13 +45,16 @@ this board with the reference, frame by frame:
 | 3 | The 18 picture-gate titles (600 frames each, pad input) and the five PSG games (900) | 23 of 23 identical |
 | 4 | The library: every HuCard, 300 frames from power-on with a RUN press | 180 of 180 identical (179 cards and the Street Fighter II' card) |
 | 5 | A test device in every socket, the machine rows crossed, each named switch away from its default | 71 of 71 identical; 37 of 37 switches and devices change at least one case |
-| 6 | Save states: round trip and run-ahead on the 18 titles | 18 of 18, twice each; run-ahead equal on all 18 |
+| 6 | Save states: round trip and run-ahead on the 18 titles | 18 of 18, twice each; run-ahead equal on all 18; a 0.1.0 state refused |
 | 7 | Seeded faults | 48 caught, 0 missed |
 
 In all, **84,200 frames in 275 lockstep cases, and no case has ever
 differed**: the transcription was identical to the reference on the first run
-of each. The whole gate, rung 1 and `cargo test` were re-run on 2026-11-13
-with the same results. **Nothing here was run on a real console**: this
+of each, at `v0.1.0` (2026-11-12) and again at `v0.2.0` (2026-11-13: the
+reference cache rebuilt from the new reference, 275 of 275 identical on the
+first run). The probe card's C18 section was made independent of its timing
+for `v0.2.0` (the wait moved the probe's timeline and the held sample of
+channel 2 happened to be 16, so `lfo_requires_ch2_on` changed nothing). **Nothing here was run on a real console**: this
 board is proven equal to pcengine-python, and how close that is to the
 hardware is the reference's record (its
 [README](https://github.com/alewman/pcengine-python#readme) and `docs/`: M1
@@ -212,14 +217,15 @@ gate's lines, the reference's press spelling, `roundtrip` and `runahead`),
 lockstep devices). Binaries: `pce-trace`, `pce-state-roundtrip`,
 `pce-bench`. Tests: `tests/sockets.rs` (the reference's
 `tests/test_sockets.py`), `pads.rs`, `cards.rs`, `state.rs`,
-`psg_levels.rs`.
+`psg_levels.rs`, `vdc_wait.rs` (the reference's issue 0004 tests, and a
+two-VDC decode made again after a wait).
 
 ## How it is proven
 
 | What | Version |
 | --- | --- |
-| pcengine-python (the reference) | tag `v0.1.0`, `bc9b976f8b6ba29ff16fdcbd527978899d7e54b4` |
-| huc6280-rust (`huc6280`) | the core of `7f49bf8` (from huc6280-python `v0.3.0`, `bf20330`, the revision the reference pins); the revision is in `Cargo.toml` |
+| pcengine-python (the reference) | `v0.2.0`, `4c32f26730eb2a95041ec62547f977f97d2ab696` (0.1.0 was proven against `v0.1.0`, `bc9b976`) |
+| huc6280-rust (`huc6280`) | `43e5978` (0.2.0, from huc6280-python `v0.4.0`, `265df88`, the revision the reference pins), by path until it is on GitHub; `Cargo.toml` |
 | The HuCard library | 179 `.7z` images (the user's), and the Street Fighter II' card of the reference's `docs/cartridge.md` |
 | Covell's CPU test | `CPU_Test.zip`, SHA-256 `db65a32d…6c937b625` (the reference's pin) |
 
@@ -233,7 +239,7 @@ the reference on PyPy 7.3.20 (Python 3.11, `PYPY_GC_NURSERY=1M`):
 | 3 | Picture and sound: the 18 picture-gate titles of the reference's `docs/m3-record.md`, 600 frames each with pad input, and the five PSG games of `docs/m4-record.md`, 900 frames | 23 of 23 identical: 10,800 frames of the 18 titles, 4,500 of the five | `rung3.sh` |
 | 4 | The library: every HuCard, 300 frames from power-on with a RUN press, and the Street Fighter II' card; the smoke list of 20 first | smoke 20 of 20; then 180 of 180 identical (the 179 cards and Street Fighter II'): 54,000 frames | `rung4.sh` |
 | 5 | Machines, sockets and switches: a test device in every socket, the machine rows crossed, a power-on seed, each named switch away from its default; and which case each one changes | 71 of 71 identical (14 socket cases, 3 machine cases, 53 switch cases, the probe's baseline); 37 of 37 switches and devices change at least one of their cases; `tests/sockets.rs` 17 tests, `tests/pads.rs` 12 | `rung5.sh` |
-| 6 | Save states: the round trip and the run-ahead pass on the 18 titles; the refusals and the synthetic-card round trip as unit tests | 18 of 18 titles equal, twice each; run-ahead equal on all 18; 8 unit tests | `rung6.sh` |
+| 6 | Save states: the round trip and the run-ahead pass on the 18 titles; the refusals (a real 0.1.0 state among them), the wiring kept, and the synthetic-card round trip as unit tests | 18 of 18 titles equal, twice each; run-ahead equal on all 18; 10 unit tests | `rung6.sh` |
 | 7 | Seeded faults: one single-line fault at a time in a copy of `src/`, run through the checks cheapest first until one fails | 48 caught, 0 missed ([docs/seeded-faults.md](docs/seeded-faults.md)) | `rung7.sh` |
 
 **The gate** (`scripts/lockstep.py`) runs each case of `scripts/cases.tsv`
@@ -256,7 +262,8 @@ state checks are described in [docs/ladder.md](docs/ladder.md).
 ### Reproducing
 
 ```text
-scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at v0.1.0, with a PyPy venv
+scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at v0.2.0, with a PyPy venv
+                                        # (CORE_SOURCE=a huc6280-python clone while its pin is not on GitHub)
 scripts/fetch_covell.sh                 # Covell's CPU test by the reference's pin, into external/covell
 scripts/make_cases.py                   # scripts/cases.tsv and smoke.txt from the library's names
 scripts/rung1.sh [CPU_Test_10.pce]
@@ -330,11 +337,28 @@ Each module's header says so; together:
 - **`power_on_seed`** needs Python's `random.Random`: `mt.rs` is the Mersenne
   Twister with Python's integer seeding and `getrandbits`, so a seeded
   power-on gives the same RAM, VRAM, sprite table and colour table.
+- **The VDC's wait** (`vdc/chip.rs`, `board.rs`, `sockets.rs`; the
+  reference's issue 0004). The reference's VDC calls the board's
+  `_serve_vram` from inside an access, and the board then runs every device,
+  the pixel path included (the SuperGrafx's VPC, the device that made the
+  access, mixes lines during the wait). A Rust device cannot be called again
+  while it is in an access, so the access *stops* where the reference calls
+  `serve` (`Vdc::serve` is a flag, `serve_wanted` the stop), the board serves
+  the chip, holds the CPU for `served - mclk`, and makes the whole decode
+  again. `VdcAccess` keeps the decode exact: the VDC accesses made before the
+  stop are handed back from a log, the stopped one is made at the time the
+  wait ended, and those after it (the lockstep pixel path writes both VDCs on
+  `ST0`-`ST2`) are made after the wait with the device's own `mclk`, as the
+  reference makes them. A device reaches a VDC's port with
+  `BoardPins::vdc_read` / `vdc_write`.
 - **Save states** (`state.rs`): the format is this crate's own (zlib of
   bincode behind a magic and a version), not the reference's tagged JSON of
   an object-graph walk; devices behind a socket save themselves
   (`DeviceState`). What holds is the reference's property and its refusals.
-  The snapshot pair has no counterpart in the reference.
+  The snapshot pair has no counterpart in the reference. The reference loads
+  a 0.1.0 state into 0.2.0 with the CPU's new field as `None`; bincode names
+  no field, so a state of format version 1 (pcengine-rust 0.1.0) is refused
+  here with an error, not converted (`tests/state.rs` keeps a real one).
 - **Not carried over**: the background's decode cache (a dict that only
   saves PyPy time), the PSG's step-stream listeners and the capture's
   `on_frame` callback (Python-side tooling), `from_path` constructors
@@ -368,45 +392,43 @@ asks each device for its next event, as the reference does.
 
 ## Notes on the reference
 
-Nothing found is a divergence: the Rust board does what pcengine-python
-`v0.1.0` does in each case, and the gate runs through all of them. They are
+Nothing found was ever a divergence: the Rust board did what pcengine-python
+`v0.1.0` did in each case, and the gate ran through all of them. They were
 places where the reference's behaviour looked unintended while it was being
 transcribed, filed in pcengine-python as
-[issue 0004](https://github.com/alewman/pcengine-python/blob/main/docs/issues/0004-findings-from-the-rust-port.md)
-(open, nothing changed):
+[issue 0004](https://github.com/alewman/pcengine-python/blob/main/docs/issues/0004-findings-from-the-rust-port.md),
+which is **settled** (2026-11-13, pcengine-python `v0.2.0`); this board
+follows the settlement:
 
-1. **`Psg.silent_units` is read once.** `Psg.__init__` builds `_levels` from
-   it, so setting it on an instance afterwards (which is how
-   `scripts/psg_compare.py` applies `VARIANTS`, with `setattr`) leaves the
-   host-rate output as it was; `scripts/reference_notes.py` shows it (the
-   level of 30 units stays 0.0, where a `Psg` built with 31 has 0.0056). The
-   referee comparison itself is not affected: it works on the step stream and
-   applies the curve itself. Here the switches are an argument of `Psg::new`.
-2. **A CPU access that waits for a VRAM DMA runs the VDC ahead of the board.**
-   `Vdc._data_access` calls `catch_up(due)` with the transfer's end, which can
-   be many lines away, while the line clock (`hsync`, `vsync`) is the board's
-   and arrives only after the access returns and the hold is applied. The
-   transfer therefore always completes as if the display never started, and
-   `dma_resumes` cannot matter for a transfer the CPU waits on. Found because
-   the probe's first version read VRAM back right after starting a DMA and the
-   switch then changed nothing.
-3. **`render_line`'s slice assignment** (`row[first:end] = pixels[: end -
-   first]`) would take a negative count and grow the row if the display
-   started past the row's end; it cannot, because such a line's events are
-   dropped by the next line's sync before it is drawn. Not reachable, noted
-   because it reads as if it were handled.
-4. **`Capture.finish_line`'s `self.path is None` branch** cannot be reached
-   through the constructor, which replaces `None` with `DirectPath`.
+1. **`Psg.silent_units` was read once** (`_levels` was built in `__init__`,
+   so setting it on an instance afterwards, as `scripts/psg_compare.py`
+   applies `VARIANTS`, left the host-rate output as it was). **Fixed**: the
+   table is rebuilt when the switch differs from the one it was built for
+   (`Psg::level_table`, `levels_units`); `scripts/reference_notes.py` now
+   shows the same level both ways.
+2. **A CPU access that waited for a VRAM DMA ran the VDC ahead of the
+   board** (`Vdc._data_access` caught the chip up to the transfer's end, lines
+   past the board's line clock, so a waited-on transfer completed as if the
+   display never started and `dma_resumes` could not matter for it). **Fixed**:
+   the board runs every device, the line clock included, event by event until
+   the access is served (`Board::serve_vram`), and holds the CPU to that time;
+   `scripts/reference_notes.py` now prints 13,850 words left in both cases.
+   How this is done without a callback from the VDC into the board that owns
+   it is under "Where Rust forced a difference".
+3. **`render_line`'s slice with a negative count**: left (unreachable); the
+   reference's comment says why, and so does this board's.
+4. **`Capture.finish_line`'s `self.path is None` branch**: left (reachable by
+   design: the reference's `scripts/pixelpath_bench.py` sets it).
 5. Small things: `Psg._acc_steps`, `Psg._reload_lfo_channels` and
-   `PopulousCard.RAM_BANKS` are never used; `sockets.py` cites U13 for the
-   video-bus pins where `docs/sockets.md` says U15; `Board.reset(POWER_ON)`
-   resets the CPU's on-die peripherals and the devices but not the VDC, the
-   VCE, the PSG or the RAM.
+   `PopulousCard.RAM_BANKS` are removed here too; the reference's
+   `docs/sockets.md` now cites U13 for the video-bus pins; `Board.reset(POWER_ON)`
+   is documented as not a power cycle (here too, on `Board::reset`).
 
-The CPU core's own notes (interrupt edge cases, including one that makes a
-save state taken at a particular boundary continue differently) are in
-huc6280-rust's README and huc6280-python's issue 0005; this board inherits
-them with the core.
+The CPU core's own notes (interrupt edge cases, including one that made a
+save state taken at a particular boundary continue differently) were
+huc6280-python's issue 0005, settled in its `v0.4.0`; huc6280-rust 0.2.0
+carries the settlement and this board carries it with the core (the CPU's
+state now holds `polled_irq_lines`).
 
 ## Provenance
 
