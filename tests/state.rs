@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 //! Save states (state.rs): a saved and loaded run continues as the run that was not
 //! interrupted; the refusals; the snapshot pair. The reference's tests/test_state.py on its
 //! own synthetic card, so nothing here needs a ROM.
@@ -270,7 +271,21 @@ fn a_state_of_the_previous_format_is_refused() {
     system.run_frame();
     let error = refusal(&mut system, old);
     assert!(
-        error.contains("version 1, not 2"),
+        error.contains("version 1, not 3"),
+        "unexpected refusal: {error}"
+    );
+}
+
+/// A state saved by pcengine-rust 0.2.0 (format version 2, the VDC's withdrawn line machine)
+/// from `program()` after one frame: refused cleanly, not converted (state.rs).
+#[test]
+fn a_state_of_the_withdrawn_line_machine_is_refused() {
+    let old = include_bytes!("data/state-v2.pcestate");
+    let mut system = system_with(rom(&program()), PC_ENGINE);
+    system.run_frame();
+    let error = refusal(&mut system, old);
+    assert!(
+        error.contains("version 2, not 3"),
         "unexpected refusal: {error}"
     );
 }

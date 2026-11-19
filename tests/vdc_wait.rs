@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 //! Issue 0004 of the reference, settled in pcengine-python 0.2.0: the board's own events run
 //! while the CPU waits on a VDC access, and the PSG's level table follows `silent_units`. The
 //! reference's `tests/test_vdc_background.py` (`test_a_cpu_waiting_on_a_dma_*`) and
@@ -95,6 +96,37 @@ fn a_cpu_waiting_on_a_dma_is_held_through_the_display_while_it_is_paused_c7() {
         .map(|&i| vdc.vram[0x5000 + i])
         .collect();
     assert_eq!(copied, [0, 0x800, 0xFFF]);
+}
+
+/// The clean rewrite (2026-11-19; the reference's chip.py `write`): DVSSR's high byte arms the
+/// sprite-table transfer [mfr: "triggered by access to the high byte"] and its low byte alone
+/// does not. Checked here on its own because the Rust code this replaced was withdrawn unread,
+/// so whether it ever armed on the low byte is not known from it; the reference states the rule.
+#[test]
+fn only_dvssrs_high_byte_arms_the_sprite_table_transfer() {
+    for (high, copied) in [(false, 0u16), (true, 0x1234)] {
+        let board = Board::new(BoardOptions {
+            machine: FIXED_263,
+            ..BoardOptions::default()
+        })
+        .unwrap();
+        let mut cpu = ScriptedCpu::new(board, true);
+        standard_display(&mut cpu, 0x0080);
+        cpu.board.vdcs[0].vram[0x7F00] = 0x1234;
+        cpu.write(VDC_ADDR, r::SATB as u8);
+        if high {
+            cpu.write(VDC_ADDR + 2, 0x00);
+            cpu.write(VDC_ADDR + 3, 0x7F);
+        } else {
+            cpu.board.vdcs[0].regs.value[r::SATB] = 0x7F00; // the address, without a write to it
+            cpu.write(VDC_ADDR + 2, 0x00);
+        }
+        cpu.board.advance(LINE_CLOCKS * 263);
+        assert_eq!(
+            cpu.board.vdcs[0].sat[0], copied,
+            "high byte written: {high}"
+        );
+    }
 }
 
 fn w(psg: &mut Psg, reg: u32, value: u8) {

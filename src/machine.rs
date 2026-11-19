@@ -1,27 +1,29 @@
-//! The machine table and the clock constants every module shares
-//! (`machine.py`).
+// SPDX-License-Identifier: MIT
+// HSYNC_CLOCKS and LINE_CLOCKS cite MAME's huc6260.cpp (BSD-3-Clause, copyright Wilbert Pol;
+// notice in NOTICE.md): values from its comment, no code.
+//! The machine table and the clock constants every module shares (`machine.py`).
 //!
-//! One board, a table of rows: the PC Engine and the TurboGrafx-16 differ by a
-//! pin (the reference's docs/start-here.md). Add-ons (SuperGrafx, CD) add rows
-//! or build on this board; they do not fork it.
+//! One board, a table of rows: the PC Engine and the TurboGrafx-16 differ by a pin
+//! (the reference's docs/start-here.md). Add-ons (SuperGrafx, CD) add rows or pin this board;
+//! they do not fork it.
 //!
-//! Differences forced by Rust: time is `i64` master clocks everywhere (the
-//! reference's unbounded `int`; a line's start may be negative with
-//! `start_offset`).
-
+//! Rust: Python's integer `//` and float `round()` are spelled out here (`py_floordiv`,
+//! `round_ties_even`) for the modules that need the reference's arithmetic.
 /// [hw: pcetech 2.4] 21.47727 MHz master clock (6 x NTSC colour burst).
 pub const MASTER_HZ: i64 = 21_477_272;
 
-/// [doc: wiki "Timing"; emu: Mednafen vce.cpp] a line is 1365 master clocks whatever the dot clock
-/// (C5: "roughly 342 dots" at 5 MHz is 1365 / 4 = 341.25).
+/// [emu: MAME huc6260.cpp (BSD-3-Clause) "A full line lasts 1365 master cycles"; doc: wiki
+/// "Timing" (the dot clocks as master / 4, 3, 2)] a line is 1365 master clocks whatever the dot
+/// clock (C5: pcetech's "roughly 342 dots" at 5 MHz is 1365 / 4 = 341.25).
 pub const LINE_CLOCKS: i64 = 1365;
 
-/// [emu: Mednafen vce.cpp l.561 `hblank_counter = hblank ? 237 : 1128`] the VCE's horizontal sync
-/// is 237 master clocks at the start of a line. Tier 5; the real width is not published (U19).
+/// [emu: MAME huc6260.cpp (BSD-3-Clause, Wilbert Pol) "HSync is low for 237 and high for 1128
+/// master cycles"] the VCE's horizontal sync is 237 master clocks at the start of a line. Emulator
+/// tier, permissive source; no document or hardware measurement here gives the width (U19).
 pub const HSYNC_CLOCKS: i64 = 237;
 
-/// [emu: Mednafen vce.cpp `vblank_counter = vblank ? 4095 : ...`] the vertical sync is the last
-/// three lines of a frame (4095 = 3 x 1365). [hw: pcetech 7] "3 lines for the sync area".
+/// [hw: pcetech 7] "3 lines for the sync area", the last three lines of a frame; [emu: MAME
+/// huc6260.cpp "VSync is low for 4095 master cycles (3 lines)"].
 pub const VSYNC_LINES: i64 = 3;
 
 /// [hw: pcetech 2.4] CPU clock is master/3 (high) or master/12 (low); power-up is low.

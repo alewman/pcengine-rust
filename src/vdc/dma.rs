@@ -1,38 +1,51 @@
+// SPDX-License-Identifier: MIT
+// This file transcribes the reference's vdc/dma.py of the clean rewrite of 2026-11-19
+// (pcengine-python 3318027; docs/restart.md here), written without the withdrawn code or any GPL
+// source.
 //! The VDC's two DMAs and burst mode: VRAM -> VRAM, and VRAM -> sprite attribute table
 //! (`vdc/dma.py`).
 //!
 //! [hw: pcetech 5.4; mfr: Hudson HuC6270 manual DCR/SOUR/DESR/LENR/DVSSR]
 //!
-//! VRAM -> VRAM: starts when LENR's MSB is written; one word per two dots (read, then write); SOUR
-//! and DESR step up or down by DCR D2/D3 (not by the CR increment), LENR counts down and ends at
-//! $FFFF; MAWR, MARR, the read buffer and the write latch are untouched. A transfer that is running
-//! when the display period starts is **paused and resumes once the VDC is free again** (C7:
-//! MacDonald, tier 2, and Mesen2 say so; Hudson's manual says the remainder is not transferred
-//! and Mednafen cancels it; `resume = false` selects that reading). Time: 2 dots per word is
-//! Mednafen's and Mesen2's.
+//! VRAM -> VRAM: starts when LENR's MSB is written; SOUR and DESR step up or down by DCR D2/D3 (not
+//! by the CR increment), LENR counts down and ends at $FFFF; MAWR, MARR, the read buffer and the
+//! write latch are untouched. A transfer that is running when the display period starts is **paused
+//! and resumes once the VDC is free again** (C7: MacDonald, tier 2; Mesen2 is observed to do the
+//! same; Hudson's manual says the remainder is not transferred, and Mednafen is observed to cancel
+//! it; `resume=false` selects that reading).
 //!
-//! VRAM -> SAT: armed by a write to DVSSR, started when the display period ends (or every frame
-//! with DCR D4); the 256 words are copied at the start and the VDC is busy for 1024 dots, which
-//! is three lines at 5 MHz, "four lines after the last active line" as pcetech says (U2). The
-//! done interrupt (DCR D0) follows.
+//! Time per word: a word is one VRAM read and one VRAM write, and the VRAM access width (MWR VM) is
+//! "how many clocks should be used for VRAM ... accesses, or for block transfer" [mfr: MWR (a)]: one
+//! dot per access at width 1, so **2 dots a word** in mode 0, 4 in modes 1 and 2, 8 in mode 3 (the
+//! mode as the last vertical blanking took it). DOC for the reading of the table, the per-word count
+//! a derivation from it (HYPOTHESIS for modes 1-3, which no game here uses: pcetech 5.1).
 //!
-//! Burst mode (CR D6 and D7 clear when the frame starts) is held by the sequencer; the SAT
+//! VRAM -> SAT: armed by a write to DVSSR's MSB [mfr: "triggered by access to the high byte"],
+//! started when the vertical blanking period begins (or every frame with DCR D4) [mfr: note (b)]; the
+//! 256 words are copied at the start and the VDC is busy until the done flag (DCR D0), which comes
+//! **three lines later**: "four scanlines after the end of the active display period (e.g. if the
+//! last line of the active display is $DF, it happens at $E3)" [hw: pcetech 5.4, tier 2; MacDonald
+//! measured it at the 5 MHz dot clock as far as he says; what it is at 7 and 10 MHz is open, U2].
+//!
+//! Burst mode (CR D6 and D7 clear when the VDC's frame starts) is held by the sequencer; the SAT
 //! transfer and VRAM DMA are allowed whenever the display is not drawing.
 //!
 //! While either runs, CPU VRAM accesses wait (BSY).
 //!
-//! Differences forced by Rust: `DmaEngine` is the state; its methods are `impl Vdc` here, with
-//! the reference's names behind `dma_`.
+//! Rust: the reference's `DmaEngine` holds its chip; here it is the state (`Vdc::dma`) and its
+//! methods are an `impl Vdc` block with a `dma_` prefix (vdc/mod.rs).
 
 use serde::{Deserialize, Serialize};
 
+use crate::machine::LINE_CLOCKS;
 use crate::vdc::chip::Vdc;
 use crate::vdc::regs as r;
 use crate::vdc::sequencer::VPhase;
 
-/// [emu: Mednafen "1024 VDC cycles"; Mesen2 the same]
-pub const SAT_DOTS: i64 = 1024;
-pub const DMA_DOTS_PER_WORD: i64 = 2;
+/// [hw: pcetech 5.4] done four lines after the last display line
+pub const SAT_CLOCKS: i64 = 3 * LINE_CLOCKS;
+/// [mfr: MWR VM] dots per VRAM access by access-width mode
+pub const ACCESS_DOTS: [i64; 4] = [1, 2, 2, 4];
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DmaEngine {
@@ -46,6 +59,8 @@ pub struct DmaEngine {
     pub satb_pending: bool,
     /// the VDC is busy with the SAT transfer until then
     pub sat_end: Option<i64>,
+    /// finish_without_display: a VDC with no sync never displays
+    no_display: bool,
 }
 
 impl DmaEngine {
@@ -58,8 +73,11 @@ impl DmaEngine {
             t0: 0,
             satb_pending: false,
             sat_end: None,
+            no_display: false,
         }
     }
+
+    // -- state ------------------------------------------------------------------------------------
 
     /// CPU VRAM accesses wait while a transfer runs, paused or not.
     #[inline]
@@ -71,20 +89,29 @@ impl DmaEngine {
 impl Vdc {
     /// The VRAM is free of display fetches (blanking, or burst mode).
     fn dma_allowed(&self) -> bool {
-        self.dma.sat_end.is_none() && (self.seq.vphase != VPhase::Vdw || self.seq.burst_mode)
+        let seq = &self.seq;
+        self.dma.sat_end.is_none()
+            && (self.dma.no_display || seq.vphase != VPhase::Vdw || seq.burst_mode)
+    }
+
+    /// Master clocks of one access (the read or the write of a word).
+    fn dma_half_word(&self) -> i64 {
+        ACCESS_DOTS[(self.mwr_cache & 3) as usize] * self.seq.divider
     }
 
     pub(crate) fn dma_next_event(&self) -> Option<i64> {
-        let mut time = self.dma.sat_end;
+        let mut times: [Option<i64>; 2] = [None, None];
+        if let Some(sat_end) = self.dma.sat_end {
+            times[0] = Some(sat_end);
+        }
         if self.dma.running && self.dma_allowed() {
-            let mut halves = (self.regs.value[r::LENR] as i64 + 1) * DMA_DOTS_PER_WORD;
+            let mut halves = (self.regs.value[r::LENR] as i64 + 1) * 2;
             if !self.dma.read_phase {
                 halves -= 1; // the read of the current word is done
             }
-            let at = self.dma.t0 + halves * self.seq.divider;
-            time = Some(time.map_or(at, |t| t.min(at)));
+            times[1] = Some(self.dma.t0 + halves * self.dma_half_word());
         }
-        time
+        times.into_iter().flatten().min()
     }
 
     // -- commands ---------------------------------------------------------------------------------
@@ -110,24 +137,26 @@ impl Vdc {
         self.dma.t0 = now;
     }
 
-    /// The SAT transfer test of Mednafen's Run loop: after the display period.
+    /// The vertical blanking period begins: run the armed (or, with DCR D4, every frame's)
+    /// sprite-table transfer [mfr: DVSSR note (b), DCR DSR]. The words are copied now; reads
+    /// past the VRAM give 0, as the CPU port's do (U23).
     pub(crate) fn dma_display_ended(&mut self, now: i64) {
         self.dma_advance(now);
-        if self.dma.satb_pending || self.regs.value[r::DCR] & 0x10 != 0 {
-            self.dma.satb_pending = false;
-            let start = self.regs.value[r::SATB] as usize;
-            for i in 0..256 {
-                self.sat[i] = if start + i < self.vram.len() {
-                    self.vram[start + i]
-                } else {
-                    0
-                };
-            }
-            self.dma.sat_end = Some(now + SAT_DOTS * self.seq.divider);
-        } else {
-            self.seq.burst_mode = true;
+        if !(self.dma.satb_pending || self.regs.value[r::DCR] & 0x10 != 0) {
+            return;
         }
-        self.dma.t0 = now;
+        self.dma.satb_pending = false;
+        let source = self.regs.value[r::SATB];
+        let size = self.vram.len();
+        for i in 0..256u16 {
+            let address = source.wrapping_add(i) as usize;
+            self.sat[i as usize] = if address < size {
+                self.vram[address]
+            } else {
+                0
+            };
+        }
+        self.dma.sat_end = Some(now + SAT_CLOCKS);
     }
 
     // -- running ----------------------------------------------------------------------------------
@@ -140,7 +169,6 @@ impl Vdc {
                 if self.regs.value[r::DCR] & 0x01 != 0 {
                     self.status |= r::DS;
                 }
-                self.seq.burst_mode = true;
                 self.commit_pending();
                 self.dma.t0 = end;
             }
@@ -151,7 +179,7 @@ impl Vdc {
             }
             return;
         }
-        let half = self.seq.divider; // one dot: the read, then the write, of each word
+        let half = self.dma_half_word(); // one access: the read, then the write, of each word
         while self.dma.running && self.dma.t0 + half <= t {
             if self.dma.read_phase {
                 let src = self.regs.value[r::SOUR] as usize;
@@ -193,16 +221,24 @@ impl Vdc {
         }
     }
 
-    /// A CPU VRAM access finds the VDC busy for an unknown time (paused DMA): finish it, as
-    /// Mednafen does when nothing can wait for it (its 'DMA completion forced').
-    pub(crate) fn dma_force_complete(&mut self, now: i64) {
-        if let Some(end) = self.dma.sat_end {
-            self.dma_advance(end);
-        }
-        let saved = self.seq.burst_mode;
-        self.seq.burst_mode = true;
-        self.dma.t0 = now - 2 * 65536 * self.seq.divider * DMA_DOTS_PER_WORD;
+    /// Run a paused transfer to its end as if the VRAM were free and return that time: for a
+    /// VDC with no board, whose display never ends because no sync reaches it. (A choice for
+    /// the chip on its own; a board's VDC always gets the VCE's syncs.)
+    pub(crate) fn dma_finish_without_display(&mut self, now: i64) -> i64 {
         self.dma_advance(now);
-        self.seq.burst_mode = saved;
+        self.dma.no_display = true;
+        if self.dma.running {
+            self.dma.t0 = self.dma.t0.max(now);
+        }
+        let mut end = now;
+        while self.dma.busy() {
+            let Some(due) = self.dma_next_event() else {
+                break;
+            };
+            self.dma_advance(due);
+            end = end.max(due);
+        }
+        self.dma.no_display = false;
+        end
     }
 }
