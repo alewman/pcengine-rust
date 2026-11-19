@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 //! Frames per second of this board on a card, nothing logged or digested.
 //!
 //!     pce-bench IMAGE [--frames N] [options of trace::Setup]
