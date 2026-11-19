@@ -489,7 +489,10 @@ def main() -> int:
         for part in ("src", "tests"):
             if (tree / part).exists():
                 shutil.rmtree(tree / part)
-            shutil.copytree(ROOT / part, tree / part)
+            # shutil.copy, not copytree's copy2: a restored file with its old time looks older than
+            # the last fault's build to cargo, which then keeps that fault (found by
+            # supergrafx-rust, fixed 2026-11-19)
+            shutil.copytree(ROOT / part, tree / part, copy_function=shutil.copy)
         manifest = (ROOT / "Cargo.toml").read_text().replace(
             'path = "../huc6280-rust"', f'path = "{(ROOT.parent / "huc6280-rust").as_posix()}"'
         )

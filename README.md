@@ -5,8 +5,9 @@
 > [family charter](https://github.com/alewman/emulator-lineage/blob/main/docs/charter.md)
 
 A Rust **PC Engine / TurboGrafx-16** board transcribed from
-[pcengine-python](https://github.com/alewman/pcengine-python) at `3318027`
-(its clean rewrite of 2026-11-19, after `v0.2.0`; local, not on GitHub yet)
+[pcengine-python](https://github.com/alewman/pcengine-python) at `03ac699`
+(its clean rewrite of 2026-11-19, `3318027`, and the crop of a display that starts
+before the row; local, not on GitHub yet)
 and proven equivalent to it: every CPU bus cycle
 (physical address, value, kind, master clock), every frame's picture at the
 9-bit palette value, every mixed audio sample and the CPU's state, frame by
@@ -42,7 +43,8 @@ traits, and save states.
 (`3318027`: the VDC's line machine, scroll, DMAs and three constants
 replaced because the old ones followed GPL code; [docs/restart.md](docs/restart.md))
 and huc6280-rust `e1d24a3`; the whole lockstep gate identical on the first
-run against the rebuilt reference cache.** Every rung compares this board
+run against the rebuilt reference cache; then `03ac699`, the crop of a
+display that starts before the row (CHANGELOG), the gate again identical.** Every rung compares this board
 with the reference, frame by frame:
 
 | Rung | What | Result |
@@ -236,7 +238,7 @@ two-VDC decode made again after a wait).
 
 | What | Version |
 | --- | --- |
-| pcengine-python (the reference) | `3318027e5c34f1e211515f95233a0853938a5f53` (the clean rewrite of 2026-11-19, local, not on GitHub yet; 0.2.0 was proven against `v0.2.0`, `4c32f26`, 0.1.0 against `v0.1.0`, `bc9b976`) |
+| pcengine-python (the reference) | `03ac6998c812a291e5f91882552df5ae712ba870` (the clean rewrite of 2026-11-19, `3318027`, plus the early display start crop; local, not on GitHub yet; 0.2.0 was proven against `v0.2.0`, `4c32f26`, 0.1.0 against `v0.1.0`, `bc9b976`) |
 | huc6280-rust (`huc6280`) | `e1d24a3` (from huc6280-python `6ce348e`, the revision the reference pins; both local, not on GitHub yet), by path from a sibling clone in `Cargo.toml` |
 | The HuCard library | 179 `.7z` images (the user's), and the Street Fighter II' card of the reference's `docs/cartridge.md` |
 | Covell's CPU test | `CPU_Test.zip`, SHA-256 `db65a32d…6c937b625` (the reference's pin) |
@@ -274,7 +276,7 @@ state checks are described in [docs/ladder.md](docs/ladder.md).
 ### Reproducing
 
 ```text
-scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at 3318027, with a PyPy venv
+scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at 03ac699, with a PyPy venv
                                         # (until pushed: SOURCE=a local pcengine-python clone,
                                         # CORE_SOURCE=a local huc6280-python clone)
 scripts/fetch_covell.sh                 # Covell's CPU test by the reference's pin, into external/covell

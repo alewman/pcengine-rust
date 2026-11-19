@@ -1,7 +1,18 @@
 <!-- SPDX-License-Identifier: MIT -->
 # Seeded faults (rung 7)
 
-A gate that cannot fail proves nothing. This is the record of the run on 2026-11-19 (the clean
+A gate that cannot fail proves nothing.
+
+**Rerun 2026-11-19 on pcengine-python `03ac699`** (the early display start crop, its rebuilt
+reference cache) with the seeder copying its tree with fresh modification times (`copytree`'s
+`copy2` kept the old ones, a hole supergrafx-rust found in its own copy of this seeder): **63
+caught, 3 missed**, every fault caught by the same check and case as in the table below, the same
+three missed. So no earlier "caught" here was a stale-build artefact: every fault in this list is
+in the library crate, and each planted fault writes a fresh file, so cargo rebuilt the whole crate
+from the restored tree each time anyway (a stale build needs a fault whose restore is the only
+change in its crate). Log: `external/faults-2026-11-19-03ac699.log` (not committed).
+
+This is the record of the run on 2026-11-19 (the clean
 rewrite, against pcengine-python `3318027`'s rebuilt reference cache): the 49 faults of 0.2.0 that
 did not hold withdrawn code (seven did, and were cut unread with it: docs/restart.md) and seventeen
 new ones on the new code: the line machine (`display-start-a-character-late`,

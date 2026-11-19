@@ -5,6 +5,33 @@ Not on crates.io; pin a commit (README, "Using it").
 
 ## Unreleased
 
+### The early display start (pcengine-python `03ac699`)
+
+- **A display that starts before the row is cropped** (`vdc/chip.rs` `render_line`, transcribed
+  from pcengine-python `03ac699`, local): a small HDS can put the display start inside the sync,
+  so `first` is negative. The line is drawn into a work row padded on the left, the sprites draw
+  into it (collision sees every display column), and the pad is dropped, so the row keeps
+  1365 / divider dots. This crate indexed with `first as usize` and panicked
+  (`src/vdc/chip.rs:353`); the reference's slice grew the row to 682 dots. Found by
+  supergrafx-rust on its probe card in compat and base mode (its notes on the reference, item 7).
+  New unit test `a_display_that_starts_before_the_row_is_cropped_and_the_row_keeps_its_length`.
+- The gate's reference is pcengine-python `03ac699` (`scripts/fetch_pcenginepython.sh`, which now
+  force-reinstalls the board too). The reference cache's key includes the reference's commit
+  (`scripts/lockstep.py`), so a repin starts a fresh cache; the `3318027` cache was moved aside to
+  `external/refcache-3318027`.
+- `scripts/seeded_faults.py` copies the tree with fresh modification times (`copytree`'s `copy2`
+  kept the old ones, so cargo could take a restored file for one older than the last fault's
+  build; found by supergrafx-rust).
+
+The gate against `03ac699`, the reference cache rebuilt from scratch: lockstep **275 of 275
+identical** (the reference's traces byte-identical to `3318027`'s on all 275 cases: no case of
+this gate reaches a display that starts before the row); rung 5 71 of 71 and 37 of 37 switches
+and devices change a case; rung 6 18 of 18, run-ahead 18 of 18; rung 7 **63 caught, 3 missed**,
+the same as before with the seeder fixed (no earlier catch was a stale build); `cargo test` all
+pass; clippy `-D warnings` on rustc 1.93.1 and stable 1.99.1, fmt and the wasm32 build pass.
+
+### The clean rewrite (pcengine-python `3318027`)
+
 Follows pcengine-python's clean rewrite of 2026-11-19 (`3318027`, local, not pushed yet) and its
 core's, huc6280-python `6ce348e`, through huc6280-rust `e1d24a3` (also local). The Rust code that
 transcribed the withdrawn reference code was moved aside unread and transcribed again from the
