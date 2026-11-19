@@ -1,16 +1,21 @@
 # pcengine-rust
 
+> **Lineage:** pcengine-python → **pcengine-rust** → pcengine-rust-fast → play-pce ·
+> fixes start in pcengine-python and flow down by merges ·
+> [family charter](https://github.com/alewman/emulator-lineage/blob/main/docs/charter.md)
+
 A Rust **PC Engine / TurboGrafx-16** board transcribed from
-[pcengine-python](https://github.com/alewman/pcengine-python) at `v0.2.0`
-(`4c32f26`) and proven equivalent to it: every CPU bus cycle
+[pcengine-python](https://github.com/alewman/pcengine-python) at `3318027`
+(its clean rewrite of 2026-11-19, after `v0.2.0`; local, not on GitHub yet)
+and proven equivalent to it: every CPU bus cycle
 (physical address, value, kind, master clock), every frame's picture at the
 9-bit palette value, every mixed audio sample and the CPU's state, frame by
 frame, on the whole HuCard library. pcengine-python is the specification
 (readable, cited, judged against Mesen2, Beetle PCE, Mednafen and Covell's
 photographs); this board adds nothing and tunes nothing. Its CPU is
 [huc6280-rust](https://github.com/alewman/huc6280-rust) (crate `huc6280`,
-transcribed from huc6280-python `v0.4.0`, the revision pcengine-python
-`v0.2.0` pins). The add-ons
+at `e1d24a3`, transcribed from huc6280-python `6ce348e`, the revision
+pcengine-python `3318027` pins; both local, not on GitHub yet). The add-ons
 [supergrafx-rust](https://github.com/alewman/supergrafx-rust) and
 [pcenginecd-rust](https://github.com/alewman/pcenginecd-rust) plug into its
 socket traits, and
@@ -33,10 +38,12 @@ traits, and save states.
 
 ## Status
 
-**2026-11-13: 0.2.0, following pcengine-python `v0.2.0` (its issue 0004
-settled) and huc6280-rust 0.2.0; all seven rungs pass against the new
-reference.** Every rung compares this board with the reference, frame by
-frame:
+**2026-11-19: unreleased, following pcengine-python's clean rewrite
+(`3318027`: the VDC's line machine, scroll, DMAs and three constants
+replaced because the old ones followed GPL code; [docs/restart.md](docs/restart.md))
+and huc6280-rust `e1d24a3`; the whole lockstep gate identical on the first
+run against the rebuilt reference cache.** Every rung compares this board
+with the reference, frame by frame:
 
 | Rung | What | Result |
 | --- | --- | --- |
@@ -45,13 +52,16 @@ frame:
 | 3 | The 18 picture-gate titles (600 frames each, pad input) and the five PSG games (900) | 23 of 23 identical |
 | 4 | The library: every HuCard, 300 frames from power-on with a RUN press | 180 of 180 identical (179 cards and the Street Fighter II' card) |
 | 5 | A test device in every socket, the machine rows crossed, each named switch away from its default | 71 of 71 identical; 37 of 37 switches and devices change at least one case |
-| 6 | Save states: round trip and run-ahead on the 18 titles | 18 of 18, twice each; run-ahead equal on all 18; a 0.1.0 state refused |
-| 7 | Seeded faults | 56 caught, 0 missed (eight new, on what 0.2.0 carries) |
+| 6 | Save states: round trip and run-ahead on the 18 titles | 18 of 18, twice each; run-ahead equal on all 18; 0.1.0 and 0.2.0 states refused |
+| 7 | Seeded faults | 63 caught, 3 missed (all three on the board's wait, missed in 0.2.0 too where a broken test stage hid them: [docs/seeded-faults.md](docs/seeded-faults.md)) |
 
 In all, **84,200 frames in 275 lockstep cases, and no case has ever
 differed**: the transcription was identical to the reference on the first run
-of each, at `v0.1.0` (2026-11-12) and again at `v0.2.0` (2026-11-13: the
+of each, at `v0.1.0` (2026-11-12), again at `v0.2.0` (2026-11-13: the
 reference cache rebuilt from the new reference, 275 of 275 identical on the
+first run), and again on the clean rewrite (2026-11-19: the Rust code that
+transcribed the withdrawn reference code moved aside unread and transcribed
+again from the new reference, the cache rebuilt, 275 of 275 identical on the
 first run). The probe card's C18 section was made independent of its timing
 for `v0.2.0` (the wait moved the probe's timeline and the held sample of
 channel 2 happened to be 16, so `lfo_requires_ch2_on` changed nothing). **Nothing here was run on a real console**: this
@@ -71,7 +81,9 @@ pcengine-rust = { git = "https://github.com/alewman/pcengine-rust", rev = "<comm
 ```
 
 (Pin the commit you have checked; the crate is not on crates.io. It brings
-huc6280-rust by the git revision in its own `Cargo.toml`.) Rust 1.85 or
+huc6280-rust by path from a sibling clone, `../huc6280-rust` checked out at
+`e1d24a3`, while that commit is not on GitHub; `Cargo.toml` names the git pin
+that replaces the path once it is pushed.) Rust 1.85 or
 newer. The library is `pcengine_rust`, and `pcengine_rust::huc6280`
 re-exports the CPU core.
 
@@ -139,7 +151,7 @@ one in `src/lib.rs`.
   standard conversion (the reference's `docs/vce.md`). Rows of one frame can
   differ in width (the dot clock may change between lines); dot 0 is the
   first dot after the horizontal sync, and a 256-wide picture starts at dot
-  32 of 341.
+  24 of 341 ((HDS 2 + 1) characters of 8 dots).
 - **Audio**: `board.take_audio() -> Vec<(i16, i16)>`: what every source has
   produced up to the clock now, 44.1 kHz stereo (about 737 pairs a frame).
   Call it once a frame. `board.psg.gain` scales the PSG.
@@ -158,7 +170,7 @@ one in `src/lib.rs`.
   put it back.
 - **Switches**: every named switch of the reference is a field of
   `BoardOptions` (`power_on_seed`, `start_line`, `start_offset`,
-  `vblank_dots`, `vertical_at_line_start`, `dma_resumes`, `psg`,
+  `vblank_dots`, `dma_resumes`, `psg`,
   `timer_underflow_window_mclk`), of `Machine` or of the device; the CPU's
   own are `system.cpu`'s public fields.
 - **Reset**: `board.reset(ResetKind::PowerOn)` resets the card, the port
@@ -224,8 +236,8 @@ two-VDC decode made again after a wait).
 
 | What | Version |
 | --- | --- |
-| pcengine-python (the reference) | `v0.2.0`, `4c32f26730eb2a95041ec62547f977f97d2ab696` (0.1.0 was proven against `v0.1.0`, `bc9b976`) |
-| huc6280-rust (`huc6280`) | `43e5978` (0.2.0, from huc6280-python `v0.4.0`, `265df88`, the revision the reference pins), by its GitHub revision in `Cargo.toml` |
+| pcengine-python (the reference) | `3318027e5c34f1e211515f95233a0853938a5f53` (the clean rewrite of 2026-11-19, local, not on GitHub yet; 0.2.0 was proven against `v0.2.0`, `4c32f26`, 0.1.0 against `v0.1.0`, `bc9b976`) |
+| huc6280-rust (`huc6280`) | `e1d24a3` (from huc6280-python `6ce348e`, the revision the reference pins; both local, not on GitHub yet), by path from a sibling clone in `Cargo.toml` |
 | The HuCard library | 179 `.7z` images (the user's), and the Street Fighter II' card of the reference's `docs/cartridge.md` |
 | Covell's CPU test | `CPU_Test.zip`, SHA-256 `db65a32d…6c937b625` (the reference's pin) |
 
@@ -239,8 +251,8 @@ the reference on PyPy 7.3.20 (Python 3.11, `PYPY_GC_NURSERY=1M`):
 | 3 | Picture and sound: the 18 picture-gate titles of the reference's `docs/m3-record.md`, 600 frames each with pad input, and the five PSG games of `docs/m4-record.md`, 900 frames | 23 of 23 identical: 10,800 frames of the 18 titles, 4,500 of the five | `rung3.sh` |
 | 4 | The library: every HuCard, 300 frames from power-on with a RUN press, and the Street Fighter II' card; the smoke list of 20 first | smoke 20 of 20; then 180 of 180 identical (the 179 cards and Street Fighter II'): 54,000 frames | `rung4.sh` |
 | 5 | Machines, sockets and switches: a test device in every socket, the machine rows crossed, a power-on seed, each named switch away from its default; and which case each one changes | 71 of 71 identical (14 socket cases, 3 machine cases, 53 switch cases, the probe's baseline); 37 of 37 switches and devices change at least one of their cases; `tests/sockets.rs` 17 tests, `tests/pads.rs` 12 | `rung5.sh` |
-| 6 | Save states: the round trip and the run-ahead pass on the 18 titles; the refusals (a real 0.1.0 state among them), the wiring kept, and the synthetic-card round trip as unit tests | 18 of 18 titles equal, twice each; run-ahead equal on all 18; 10 unit tests | `rung6.sh` |
-| 7 | Seeded faults: one single-line fault at a time in a copy of `src/`, run through the checks cheapest first until one fails | 56 caught, 0 missed: the 48 of 0.1.0 and eight on the VDC wait, the level table and the new CPU state field ([docs/seeded-faults.md](docs/seeded-faults.md)) | `rung7.sh` |
+| 6 | Save states: the round trip and the run-ahead pass on the 18 titles; the refusals (real 0.1.0 and 0.2.0 states among them), the wiring kept, the poll's lines carried, and the synthetic-card round trip as unit tests | 18 of 18 titles equal, twice each; run-ahead equal on all 18; 12 unit tests | `rung6.sh` |
+| 7 | Seeded faults: one single-line fault at a time in a copy of `src/`, run through the checks cheapest first until one fails | 63 caught, 3 missed: the 49 of 0.2.0 that held no withdrawn code and seventeen on the clean rewrite; the three missed are on the board's wait ([docs/seeded-faults.md](docs/seeded-faults.md)) | `rung7.sh` |
 
 **The gate** (`scripts/lockstep.py`) runs each case of `scripts/cases.tsv`
 on both boards: `scripts/pce_trace.py` on the reference's interpreter and
@@ -262,8 +274,9 @@ state checks are described in [docs/ladder.md](docs/ladder.md).
 ### Reproducing
 
 ```text
-scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at v0.2.0, with a PyPy venv
-                                        # (CORE_SOURCE=a local huc6280-python clone, optional)
+scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at 3318027, with a PyPy venv
+                                        # (until pushed: SOURCE=a local pcengine-python clone,
+                                        # CORE_SOURCE=a local huc6280-python clone)
 scripts/fetch_covell.sh                 # Covell's CPU test by the reference's pin, into external/covell
 scripts/make_cases.py                   # scripts/cases.tsv and smoke.txt from the library's names
 scripts/rung1.sh [CPU_Test_10.pce]
@@ -281,19 +294,23 @@ cargo test --release
 What each needs: Rust 1.85 or newer; Python 3 for the scripts (standard
 library only); PyPy for the reference (`PYTHON=/path/to/pypy3` for
 `fetch_pcenginepython.sh`, default `pypy3` on the PATH); `7z` to read the
-`.7z` cards; your own ROMs. The script defaults are the author's layout and
-each is overridden by an environment variable: `LIB` (the directory of the
-179 HuCard `.7z` images, named as No-Intro names them), `COVELL` (Covell's
-`CPU_Test_10.pce`, which `fetch_covell.sh` fetches), `SF2` (the Street
-Fighter II' card, which is not in the library) and `JOBS` (parallel cases, at
-most 16). Archives are extracted one at a time into `scratch/` (gitignored)
+`.7z` cards; your own ROMs, named by environment variable (no machine path
+is in the scripts): `LIB` (the directory of the 179 HuCard `.7z` images,
+named as No-Intro names them; required), `COVELL` (Covell's
+`CPU_Test_10.pce`; default where `fetch_covell.sh` puts it), `SF2` (the
+Street Fighter II' card, which is not in the library; default its No-Intro
+name under `$NO_INTRO_DIR/NEC - PC Engine - TurboGrafx-16/`) and `JOBS`
+(parallel cases, at most 16). Archives are extracted one at a time into `scratch/` (gitignored)
 and removed; the library is only read.
 
 CI (`.github/workflows/ci.yml`, main and pull requests) runs `cargo fmt
 --check`, `cargo clippy -D warnings`, `cargo test` (the sockets, the pads,
 the mappers on synthetic images, the PSG table, the save-state round trip and
 refusals on a synthetic card) and rung 1 on Covell's test, fetched by the
-reference's pin. The lockstep gate needs the library and runs by hand.
+reference's pin. The lockstep gate needs the library and runs by hand. CI
+clones huc6280-rust beside the checkout at `e1d24a3` for the path
+dependency; that commit is not on GitHub yet, so CI fails at the clone until
+it is pushed.
 
 ## Where Rust forced a difference
 
@@ -358,7 +375,9 @@ Each module's header says so; together:
   The snapshot pair has no counterpart in the reference. The reference loads
   a 0.1.0 state into 0.2.0 with the CPU's new field as `None`; bincode names
   no field, so a state of format version 1 (pcengine-rust 0.1.0) is refused
-  here with an error, not converted (`tests/state.rs` keeps a real one).
+  here with an error, not converted (`tests/state.rs` keeps a real one). Since the
+  clean rewrite the format is version 3 (the VDC's line machine and the timer changed), and
+  a 0.2.0 state (version 2) is refused the same way.
 - **Not carried over**: the background's decode cache (a dict that only
   saves PyPy time), the PSG's step-stream listeners and the capture's
   `on_frame` callback (Python-side tooling), `from_path` constructors
@@ -434,13 +453,19 @@ state now holds `polled_irq_lines`).
 
 No GPL or LGPL source was copied, read or transcribed for this crate, and no
 emulator's source was opened. The only sources transcribed are our own MIT
-repositories, pcengine-python and (through huc6280-rust) huc6280-python, whose
-trees are checked for copied or transcribed emulator code by pcengine-python's
-`scripts/provenance_check.py`
-([docs/provenance.md](https://github.com/alewman/pcengine-python/blob/main/docs/provenance.md)).
-Emulators are named in the comments as the reference names them: as the
-sources of a reading, not of code. One small table has a permissively
-licensed origin, as in the reference: see [NOTICE.md](NOTICE.md).
+repositories, pcengine-python and (through huc6280-rust) huc6280-python. The
+licence audit of 2026-11-13 found that parts of the reference (the VDC's line
+machine, parts of the VDC chip and DMA, three constants) had followed GPL
+code it had read, and this crate transcribed them; on 2026-11-19 the
+reference replaced them and this crate followed, with the old Rust code
+moved aside unread and the new reference transcribed again
+([docs/restart.md](docs/restart.md), verdicts in
+[docs/provenance.md](docs/provenance.md)). The withdrawn code is still in
+this repository's history; whether to rewrite that history is the owner's
+call. Emulators are named in the comments as the reference names them: as
+the sources of an observation, not of code. MAME's BSD-3-Clause PC Engine
+files inform the reference, and so this crate, where the documents are
+silent: see [NOTICE.md](NOTICE.md).
 
 [docs/handoff-brief.md](docs/handoff-brief.md) is the brief this board was
 built from, kept as written, with what was built appended.
