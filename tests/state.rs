@@ -303,3 +303,36 @@ fn loading_keeps_the_vdcs_wired_to_the_boards_wait() {
     load_snapshot(&mut other, &snapshot).unwrap();
     assert!(other.board().vdcs.iter().all(|vdc| vdc.serve));
 }
+
+/// The CPU's `polled_irq_lines` (huc6280-python 0.4.0, cleared at each boundary since 6ce348e)
+/// is in a state: found at a boundary where it is set (a timer interrupt line that rises and
+/// is acknowledged in a loop with interrupts masked, so it changes in some instruction's last
+/// cycle sooner or later), saved and loaded, the CPU's state is equal field for field.
+#[test]
+fn a_state_carries_the_lines_the_last_poll_saw() {
+    let code: &[u8] = &[
+        0x78, // SEI
+        0xA9, 0xFF, 0x53, 0x02, // LDA #$FF; TAM #$02: the hardware page at $2000
+        0xA9, 0x00, 0x8D, 0x00, 0x2C, // LDA #0; STA $2C00: timer latch 0
+        0xA9, 0x01, 0x8D, 0x01, 0x2C, // LDA #1; STA $2C01: timer on
+        0x8D, 0x03, 0x34, // loop ($E00F): STA $3403 (acknowledge the timer)
+        0xEA, 0xEA, // NOP; NOP
+        0x4C, 0x0F, 0xE0, // JMP loop
+    ];
+    let mut data = image(0x2000);
+    data[..code.len()].copy_from_slice(code);
+    let mut system = system_with(rom(&data), PC_ENGINE);
+    let mut found = false;
+    for _ in 0..2_000_000 {
+        system.step();
+        if system.cpu.capture_state().polled_irq_lines.is_some() {
+            found = true;
+            break;
+        }
+    }
+    assert!(found, "no boundary with the poll's lines set");
+    let state = save_state(&system);
+    let mut other = system_with(rom(&data), PC_ENGINE);
+    load_state(&mut other, &state).unwrap();
+    assert_eq!(system.cpu.capture_state(), other.cpu.capture_state());
+}

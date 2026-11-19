@@ -242,7 +242,6 @@ impl Vdc {
         self.seq.divider = divider;
         self.seq.vsync_this_line = false;
         self.seq.rcr_compared = self.seq.rcr_count; // the count as the previous line step left it
-        #[allow(clippy::absurd_extreme_comparisons)]
         if RASTER_COMPARE_CLOCKS != 0 {
             self.seq
                 .schedule(mclk + RASTER_COMPARE_CLOCKS, Event::Raster);

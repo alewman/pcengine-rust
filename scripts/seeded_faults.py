@@ -471,6 +471,17 @@ def main() -> int:
     missed = ran = 0
     tree = args.work / "tree"
     target = args.work / "target"
+    # The unfaulted board must pass the first checks, or every fault is "caught" by a case that
+    # cannot run (a missing image fails a case as surely as a difference does).
+    clean = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "lockstep.py"), "--reference-cache", str(args.cache),
+         "--traces", str(args.work / "traces"), "--jobs", str(args.jobs), "--no-narrow", "--quiet",
+         *LOCKSTEP[0][1]],
+        capture_output=True, text=True,
+    )  # fmt: skip
+    if clean.returncode:
+        print(f"the unfaulted board fails {LOCKSTEP[0][0]}; fix that first:\n{clean.stdout[-800:]}")
+        return 2
     for name, (file, old, new, _) in FAULTS.items():
         if args.only and name != args.only:
             continue
@@ -484,6 +495,9 @@ def main() -> int:
         )
         (tree / "Cargo.toml").write_text(manifest)
         shutil.copy(ROOT / "Cargo.lock", tree / "Cargo.lock")
+        # src/lib.rs includes the README as a doctest: without it `cargo test` fails whatever the
+        # fault, and every fault that reached the tests counted as caught (fixed 2026-11-19)
+        shutil.copy(ROOT / "README.md", tree / "README.md")
         source = tree / "src" / file
         text = (ROOT / "src" / file).read_text()
         if text.count(old) != 1:
