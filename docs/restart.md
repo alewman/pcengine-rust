@@ -99,6 +99,9 @@ to `external/refcache-v0.2.0`).
 
 Everything the reference's `docs/restart.md` lists as open stays open here (the raster compare's
 place in the line, the scroll latch fit, the display start, the front porch, the SAT transfer's
-length at 7 and 10 MHz, the timer window, the vblank fit -16 against -18), with the two library
+length at 7 and 10 MHz, the timer window), with the two library
 regressions it records against the referees (Barbarian (Atari ST), Pac-Land). They are questions
-about the hardware and belong upstream; this crate follows whatever the reference settles.
+about the hardware and belong upstream; this crate follows whatever the reference settles. The
+vblank fit (-16 against -18) is settled: Aubrey ruled on 2026-11-20 to keep -16 as the default,
+-18 staying available as a switch (pcengine-python `docs/restart.md`); rung 5 keeps its `vblank-18`
+case.
