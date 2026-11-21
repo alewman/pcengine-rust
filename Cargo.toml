@@ -18,7 +18,7 @@ name = "pcengine_rust"
 # revision on GitHub (pushed 2026-11-20; by path from a sibling clone before that). To build
 # against a local checkout of the core instead, without editing this file:
 #   cargo build --config 'patch."https://github.com/alewman/huc6280-rust".huc6280-rust.path="../huc6280-rust"'
-huc6280 = { package = "huc6280-rust", git = "https://github.com/alewman/huc6280-rust", rev = "e1d24a395743779d5fa13aa70e7590f4821345f3" }
+huc6280 = { package = "huc6280-rust", git = "https://github.com/alewman/huc6280-rust", rev = "1bb840db54a4ccae823a5109e3e98e4d2bb8023c" }  # 1bb840d: its history reset (2026-11-21), e1d24a3's core
 # Save states (src/state.rs) and the card's identity in them.
 serde = { version = "1", features = ["derive"] }
 bincode = "1.3"

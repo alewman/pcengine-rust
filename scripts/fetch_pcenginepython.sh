@@ -12,8 +12,8 @@
 #   install the core from instead of the pyproject's GitHub pin (its own dependency,
 #   6502-python, still comes by the core's pin).
 set -euo pipefail
-COMMIT=03ac6998c812a291e5f91882552df5ae712ba870  # the clean rewrite + the early display start crop
-CORE_COMMIT=6ce348e13c9ef3009bd07e7938c4b48956eeadc6  # huc6280-python, the clean rewrite
+COMMIT=647de63f60ce7a6a74f584c4e37673c2ba1505ba  # its history reset (2026-11-21): 03ac699's board
+CORE_COMMIT=5cff9e8afa68cf3e0b8507ddfd84c8a36f4b2c21  # huc6280-python's history reset: 6ce348e's core
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DEST=${1:-"$ROOT/external/pcengine-python"}
 SOURCE=${2:-https://github.com/alewman/pcengine-python.git}
