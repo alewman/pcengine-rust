@@ -1,0 +1,20 @@
+lib-Santatlantean (World) (Aftermarket) (Unl)
+lib-Tiger Road (USA)
+lib-Bomberman (USA)
+lib-After Burner II (Japan) (En)
+lib-Davis Cup Tennis (USA)
+lib-Galaga '90 (USA)
+lib-Battle Royale (USA)
+lib-Super Metal Crusher (Japan) (En)
+lib-Night Creatures (USA)
+lib-Populous (Japan) (En)
+map-sf2
+sock-pad6-sf2
+sock-multitap-bomberman94
+lib-Dungeon Explorer (USA)
+lib-Blazing Lazers (USA)
+lib-Bonk's Adventure (USA)
+lib-R-Type (USA)
+lib-Gradius (Japan) (En)
+lib-Devil's Crush (USA)
+lib-Splatterhouse (USA)

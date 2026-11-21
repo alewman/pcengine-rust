@@ -1,0 +1,572 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+"""A gate that cannot fail proves nothing: build the board with one fault at a time and check
+that some rung catches each.
+
+Each fault is one exact text replacement in a copy of ``src/`` (with ``tests/``), built into a
+shared target directory under ``external/faults/``; then the checks run, cheapest first, until
+one fails:
+
+    rung 2      lockstep: Covell's CPU test and the probe card with every default
+    rung 5      lockstep: the socket, machine and switch cases
+    rung 4s     lockstep: the smoke list
+    tests       cargo test (tests/*.rs and the unit tests)
+    rung 3      lockstep: the picture and PSG titles
+    rung 4      lockstep: the whole library
+    rung 6      the save-state round trip and the run-ahead pass on the 18 titles
+
+The reference's traces come from the cache a full gate run left (``--reference-cache``), so a
+fault costs a build and the Rust side of the cases. A fault no check catches is reported as
+MISSED.
+
+    seeded_faults.py [--cache DIR] [--only NAME] [--jobs N] [--list]
+"""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+# name: (file, exact text, replacement, what it changes)
+FAULTS = {
+    # board.rs
+    "vce-access-not-stretched": (
+        "board.rs",
+        "if (HARDWARE_FIRST_PAGE..HARDWARE_FIRST_PAGE + 8).contains(&page) {",
+        "if (HARDWARE_FIRST_PAGE..HARDWARE_FIRST_PAGE + 4).contains(&page) {",
+        "only a VDC access takes the extra cycle, not a VCE one (C4, ares' reading)",
+    ),
+    "row-ends-a-dot-late": (
+        "board.rs",
+        "self.row_end = Some(at + HSYNC_CLOCKS);",
+        "self.row_end = Some(at + HSYNC_CLOCKS + 4);",
+        "a line's picture row is handed to the capture 4 master clocks late",
+    ),
+    "irq1-from-the-first-vdc-only": (
+        "board.rs",
+        "self.vdcs.iter().any(|vdc| vdc.irq1()),",
+        "self.vdcs[0].irq1(),",
+        "a second VDC's interrupt is not ORed into IRQ1 (the reference's issue 0001)",
+    ),
+    "port-device-not-caught-up": (
+        "board.rs",
+        "            port.catch_up(target, &mut pins);\n",
+        "            let _ = (&port, &mut pins);\n",
+        "the board never runs the port device up to its clock (the reference's issue 0002)",
+    ),
+    "disable-mask-not-delivered": (
+        "board.rs",
+        "            pins.set_irq_disable(self.cpu_io.irq.disable);\n",
+        "",
+        "a write to $1402 never reaches the CPU",
+    ),
+    "lines-delivered-only-on-advance": (
+        "board.rs",
+        "        // the access itself (a status read) may have changed a line\n        self.deliver_lines(Some(pins), false);\n",
+        "",
+        "an interrupt line an access changed is seen by the CPU a cycle later",
+    ),
+    # board.rs and sockets.rs: the VDC's wait (the reference's issue 0004, pcengine-python 0.2.0)
+    "vdc-waits-alone": (
+        "board.rs",
+        "vdc.serve = true; // the reference's `serve=self._serve_vram`",
+        "vdc.serve = false;",
+        "a waiting VDC runs alone to the transfer's end, lines ahead of the line clock (v0.1.0)",
+    ),
+    "served-access-made-at-the-old-time": (
+        "board.rs",
+        "self.vdc_access.again(index, served.max(mclk));",
+        "self.vdc_access.again(index, mclk);",
+        "the access a VDC waited for is made at the time the wait began, not where it ended",
+    ),
+    "wait-not-held": (
+        "board.rs",
+        "            self.hold(served - mclk);\n",
+        "",
+        "the CPU is not held while the board serves a VDC's access",
+    ),
+    "wait-not-settled": (
+        "board.rs",
+        "        self.settle(now);\n        now\n",
+        "        now\n",
+        "after the wait the devices are not caught up to the time it ended",
+    ),
+    "decode-again-repeats-accesses": (
+        "sockets.rs",
+        "if self.cursor < self.log.len() {",
+        "if false && self.cursor < self.log.len() {",
+        "a decode made again after a wait repeats the VDC accesses made before the stop",
+    ),
+    "accesses-after-a-stop-made": (
+        "sockets.rs",
+        "            return Some(0xFF); // after a stop: made in the next pass\n",
+        "",
+        "the VDC accesses after a stop are made before the wait, not after it",
+    ),
+    # psg/chip.rs (issue 0004 item 2)
+    "level-table-built-once": (
+        "psg/chip.rs",
+        "if self.levels_units != Some(units) {",
+        "if self.levels_units.is_none() {",
+        "`silent_units` set after construction leaves the host-rate level table (v0.1.0)",
+    ),
+    # cpu_io
+    "timer-prescaler-not-reset": (
+        "cpu_io/timer.rs",
+        "self.next_tick = mclk + TICK_CLOCKS;",
+        "self.next_tick = mclk + TICK_CLOCKS - 3;",
+        "the first tick after an enable comes a CPU cycle early (U24)",
+    ),
+    "timer-window-a-clock-long": (
+        "cpu_io/timer.rs",
+        "if mclk < self.window_end {",
+        "if mclk <= self.window_end {",
+        "the count reads $7F one master clock longer after an underflow (C25)",
+    ),
+    "irq-status-buffer-bits": (
+        "cpu_io/irq_ctl.rs",
+        "low | (buffer & 0xF8)",
+        "low | (buffer & 0xF0)",
+        "$1402/$1403 return only four bits of the I/O buffer",
+    ),
+    "io-port-d4-low": (
+        "cpu_io/io_port.rs",
+        "let mut value = 0x30 | nibble;",
+        "let mut value = 0x20 | nibble;",
+        "the I/O port's D4 reads 0",
+    ),
+    "read-does-not-load-the-buffer": (
+        "cpu_io/mod.rs",
+        "        self.buffer.value = value;\n        value\n",
+        "        value\n",
+        "a read of the timer, the port or the interrupt registers leaves the I/O buffer",
+    ),
+    # pads.rs
+    "pad6-counts-clr-level": (
+        "pads.rs",
+        "if clr && !self.clr {\n            self.second_scan = !self.second_scan;",
+        "if clr {\n            self.second_scan = !self.second_scan;",
+        "the 6-button pad changes scan on every write with CLR high, not on its rise",
+    ),
+    "multitap-counts-under-clr": (
+        "pads.rs",
+        "} else if sel && !self.sel && !clr && self.counter < Self::PORTS {",
+        "} else if sel && !self.sel && self.counter < Self::PORTS {",
+        "the multitap's counter steps on a SEL rise while CLR is high",
+    ),
+    # cards.rs
+    "card-384k-upper-mirror": (
+        "cards.rs",
+        ".map(|b| if b < 64 { b % 32 } else { 32 + (b % 16) })",
+        ".map(|b| if b < 64 { b % 32 } else { 16 + (b % 32) })",
+        "a 384 KiB card's banks $40-$7F show the wrong part of the image",
+    ),
+    "tennokoe-lock-inverted": (
+        "cards.rs",
+        "self.locked = value == 0;",
+        "self.locked = value != 0;",
+        "the Tennokoe card's RAM unlocks on a zero",
+    ),
+    "populous-ram-two-banks": (
+        "cards.rs",
+        "        if (0x40..=0x43).contains(&(address >> 13)) {\n            self.ram[(address & 0x7FFF) as usize] = value;",
+        "        if (0x40..=0x41).contains(&(address >> 13)) {\n            self.ram[(address & 0x7FFF) as usize] = value;",
+        "the Populous card's RAM takes writes in two banks of its four",
+    ),
+    # vce.rs, video.rs
+    "palette-lsb-clears-bit-8": (
+        "vce.rs",
+        "4 => self.set_entry((self.palette[self.address as usize] & 0x100) | value, mclk),",
+        "4 => self.set_entry(value, mclk),",
+        "a write of a colour's low byte clears its ninth bit",
+    ),
+    "palette-write-a-dot-late": (
+        "video.rs",
+        "while pending < used && log[pending].0 <= when {",
+        "while pending < used && log[pending].0 < when {",
+        "a palette write made exactly at a dot's start shows from the next dot",
+    ),
+    "line-count-ignores-the-machine-row": (
+        "video.rs",
+        "if self.lines_follow_vce_bit2 && !vce.bit2() {",
+        "if !vce.bit2() {",
+        "`lines_follow_vce_bit2 = false` still follows VCE bit 2 (C3)",
+    ),
+    # vdc
+    "cpu-slot-every-fourth-dot": (
+        "vdc/chip.rs",
+        "if slots.contains(&dot.rem_euclid(8)) {",
+        "if slots.contains(&dot.rem_euclid(4)) {",
+        "the CPU's VRAM slots repeat every 4 dots, not 8 (U1)",
+    ),
+    "raster-compare-a-line-early": (
+        "vdc/chip.rs",
+        "if count == self.regs.rcr() - 0x40 && self.regs.cr() & r::CR_RASTER_IRQ != 0 {",
+        "if count == self.regs.rcr() - 0x41 && self.regs.cr() & r::CR_RASTER_IRQ != 0 {",
+        "the raster compare fires a line early",
+    ),
+    "seventeen-sprites": (
+        "vdc/sprites.rs",
+        "            if entries.len() == SPRITE_LIMIT {",
+        "            if entries.len() == SPRITE_LIMIT + 1 {",
+        "a line holds 17 sprite entries before the overflow",
+    ),
+    "sprites-always-in-front": (
+        "vdc/sprites.rs",
+        "if row[target] & 0x0F == 0 || value & 0x200 != 0 {",
+        "if value & 0x0F != 0 {",
+        "a sprite pixel hides the background whatever its priority bit",
+    ),
+    "bat-height-from-the-width-bit": (
+        "vdc/background.rs",
+        "BAT_HEIGHTS[((mwr >> 6) & 1) as usize] - 1",
+        "BAT_HEIGHTS[((mwr >> 5) & 1) as usize] - 1",
+        "the BAT's height follows MWR D5",
+    ),
+    "vdw-eight-bits": (
+        "vdc/regs.rs",
+        "(self.value[VDW] & 0x1FF) as i64",
+        "(self.value[VDW] & 0xFF) as i64",
+        "the display height register is 8 bits wide",
+    ),
+    # vdc: the clean rewrite of 2026-11-19 (the line machine, the scroll, the DMAs, the budget)
+    "display-start-a-character-late": (
+        "vdc/sequencer.rs",
+        "let start = now + (self.regs.hds() + 1) * CHARACTER_DOTS * self.seq.divider;",
+        "let start = now + (self.regs.hds() + 2) * CHARACTER_DOTS * self.seq.divider;",
+        "the display starts HDS + 2 characters after the line step, not HDS + 1",
+    ),
+    "scroll-latched-a-character-early": (
+        "vdc/sequencer.rs",
+        "let latch = now.max(start - SCROLL_LATCH_DOTS * self.seq.divider);",
+        "let latch = now.max(start - (SCROLL_LATCH_DOTS + 8) * self.seq.divider);",
+        "the scroll is taken 24 dots before the display start, not 16 (the closed-box fit)",
+    ),
+    "byr-reloads-on-the-msb-only": (
+        "vdc/chip.rs",
+        "        if register == r::BYR {",
+        "        if register == r::BYR && msb {",
+        "a write of BYR's low byte alone does not reload the vertical scroll counter",
+    ),
+    "scroll-counter-not-stepped": (
+        "vdc/chip.rs",
+        "self.bg_y_counter = (self.bg_y_counter + 1) & 0x1FF;",
+        "self.bg_y_counter &= 0x1FF;",
+        "the vertical scroll counter does not count the line steps",
+    ),
+    "vds-a-line-short": (
+        "vdc/sequencer.rs",
+        "self.seq.lines_left = self.regs.vds() + 2; // [mfr: VPR \"N-2\"]",
+        "self.seq.lines_left = self.regs.vds() + 1; // [mfr: VPR \"N-2\"]",
+        "the display period starts a line early",
+    ),
+    "front-porch-vcr-plus-two": (
+        "vdc/sequencer.rs",
+        "pub const FRONT_PORCH_EXTRA_LINES: i64 = 3;",
+        "pub const FRONT_PORCH_EXTRA_LINES: i64 = 2;",
+        "the front porch is VCR + 2 lines, not pcetech's VCR + 3",
+    ),
+    "raster-counter-one-at-the-display": (
+        "vdc/sequencer.rs",
+        "self.seq.rcr_count = 0; // [mfr: RCR] 64 on the line before the display period",
+        "self.seq.rcr_count = 1; // [mfr: RCR] 64 on the line before the display period",
+        "the raster counter is $41, not $40, on the line before the display period",
+    ),
+    "burst-from-the-background-bit": (
+        "vdc/sequencer.rs",
+        "let burst = self.regs.cr() & (r::CR_SPRITES | r::CR_BACKGROUND) == 0;",
+        "let burst = self.regs.cr() & r::CR_BACKGROUND == 0;",
+        "burst mode is decided from the background enable alone",
+    ),
+    "cut-display-loses-its-vblank": (
+        "vdc/sequencer.rs",
+        "self.seq.vblank_owed = true; // cut short: the vertical blanking comes on the next line",
+        "self.seq.vblank_owed = false;",
+        "a display period the vertical sync cuts short has no vertical blanking (C27)",
+    ),
+    "sat-transfer-two-lines": (
+        "vdc/dma.rs",
+        "pub const SAT_CLOCKS: i64 = 3 * LINE_CLOCKS;",
+        "pub const SAT_CLOCKS: i64 = 2 * LINE_CLOCKS;",
+        "the SAT transfer is busy two lines, not pcetech's three",
+    ),
+    "dma-cancelled-by-the-display": (
+        "vdc/dma.rs",
+        "if self.dma.running && !self.seq.burst_mode && !self.dma.resume {",
+        "if self.dma.running && !self.seq.burst_mode {",
+        "a VRAM DMA running at the display start is cancelled whatever `dma_resumes` says (C7)",
+    ),
+    "vram-dma-one-dot-a-word": (
+        "vdc/dma.rs",
+        "pub const ACCESS_DOTS: [i64; 4] = [1, 2, 2, 4];",
+        "pub const ACCESS_DOTS: [i64; 4] = [1, 1, 1, 1];",
+        "a VRAM DMA access takes one dot whatever MWR's access width",
+    ),
+    "sprite-fetch-budget-ignored": (
+        "vdc/chip.rs",
+        "let fetched = fetched.min(SPRITE_LIMIT as i64).max(0) as usize;",
+        "let fetched = SPRITE_LIMIT;",
+        "the manual's pattern-fetch budget (2.4.1 (6)) is not applied",
+    ),
+    "sprite-search-budget-ignored": (
+        "vdc/chip.rs",
+        "            searched as usize,",
+        "            64,",
+        "the manual's SAT search budget (2.4.1 (6)) is not applied",
+    ),
+    "mwr-fields-live": (
+        "vdc/chip.rs",
+        "let mwr = self.mwr_cache | (regs.mwr() & 0x80);",
+        "let mwr = regs.mwr();",
+        "the sprite scan reads MWR's SM live, not as the last vertical blanking took it",
+    ),
+    "vwr-write-not-stopped-for-the-wait": (
+        "vdc/chip.rs",
+        "            if self.serve && self.bsy() {\n                // `data_access` would wait: the board serves it first (module notes)\n                self.serve_wanted = true;\n                return;\n            }\n            // a second data access",
+        "            // a second data access",
+        "a VWR write while one is pending does not stop for the board's wait (issue 0004)",
+    ),
+    # psg
+    "noise-frequency-not-complemented": (
+        "psg/chip.rs",
+        "let nf = 0x1F - (self.channels[ch].noise_control & 0x1F) as i64; // [mfr 2.3.3] NF is the complement",
+        "let nf = (self.channels[ch].noise_control & 0x1F) as i64;",
+        "the noise period is taken from NF, not its complement",
+    ),
+    "noise-feedback-bit": (
+        "psg/chip.rs",
+        "channel.lfsr = (channel.lfsr >> 1) | (bit << 17);",
+        "channel.lfsr = (channel.lfsr >> 1) | (bit << 16);",
+        "the noise shift register is 17 bits long",
+    ),
+    "lfo-shift": (
+        "psg/chip.rs",
+        "let shift = ((self.lfo_control & 3) as u32 - 1) * 2; // 0, 2, 4 [mfr 2.1.10]",
+        "let shift = (self.lfo_control & 3) as u32 - 1;",
+        "the LFO's modulation is shifted by 0, 1, 2 where a period is first loaded",
+    ),
+    "key-on-steps-the-address": (
+        "psg/chip.rs",
+        "if self.switches.keyon_mode == KeyOnMode::Reload {",
+        "if self.switches.keyon_mode != KeyOnMode::Reload {",
+        "key-on does what the other `keyon_mode` says (C22)",
+    ),
+    "dda-latch-needs-on": (
+        "psg/chip.rs",
+        "if channel.on() || !switches.dda_latch_needs_on {",
+        "if channel.on() {",
+        "R6 in DDA mode loads the latch only with the channel on (C16, Mednafen's way)",
+    ),
+    # mixer.rs
+    "mixer-rounds-half-away": (
+        "mixer.rs",
+        "round_ties_even(value).clamp(-32768, 32767) as i16",
+        "(value.round() as i64).clamp(-32768, 32767) as i16",
+        "the mixer rounds a half away from zero (Rust's `round`), not to even (Python's)",
+    ),
+    "mixer-hold-rounds": (
+        "mixer.rs",
+        "let repeats = lane.carry as i64; // Python's int(): toward zero",
+        "let repeats = lane.carry.round() as i64;",
+        "a source at another rate is held by a rounded count",
+    ),
+    "mixer-gain-twice": (
+        "mixer.rs",
+        "            let gain = if source.applies_gain() {\n                1.0\n            } else {\n                source.gain()\n            };",
+        "            let gain = source.gain() * if source.applies_gain() { 1.0 } else { 2.0 };",
+        "a source that does not apply its own gain gets it doubled",
+    ),
+    "hsync-a-clock-short": (
+        "machine.rs",
+        "pub const HSYNC_CLOCKS: i64 = 237;",
+        "pub const HSYNC_CLOCKS: i64 = 236;",
+        "the VCE's horizontal sync is 236 master clocks, not 237",
+    ),
+    # machine.rs, sockets.rs, pagetable.rs, hardware_page.rs
+    "irq-line-is-a-single-flag": (
+        "sockets.rs",
+        "            self.sources.remove(source);",
+        "            self.sources.clear();",
+        "a source letting go of an interrupt line lowers it for every source",
+    ),
+    "work-ram-half-size": (
+        "pagetable.rs",
+        "            mask: size - 1,",
+        "            mask: (size - 1) >> 1,",
+        "work RAM mirrors every 4 KiB",
+    ),
+    "interrupt-registers-unmapped": (
+        "hardware_page.rs",
+        "pages.set_base(first + 0x08, first + 0x17, Handler::CpuIo);",
+        "pages.set_base(first + 0x08, first + 0x13, Handler::CpuIo);",
+        "$FF:1400-17FF answers $FF",
+    ),
+    # state.rs, system.rs, mt.rs
+    "state-forgets-the-capture": (
+        "state.rs",
+        "    board.capture = body.capture.into_owned();\n",
+        "",
+        "a loaded state keeps the picture rows of the system it is loaded into",
+    ),
+    "state-drops-the-polled-lines": (
+        "state.rs",
+        "polled_irq_lines: s.polled_irq_lines, // saved",
+        "polled_irq_lines: None,",
+        "a state does not carry the lines the CPU's last poll saw (huc6280-python 0.4.0)",
+    ),
+    "state-forgets-the-pad-latch": (
+        "state.rs",
+        "    board.cpu_io.port.latch = body.latch;\n",
+        "",
+        "a loaded state keeps the SEL/CLR latch of the system it is loaded into",
+    ),
+    "state-takes-the-timer-switch": (
+        "state.rs",
+        "    board.cpu_io.timer.underflow_window_mclk = window;\n",
+        "",
+        "a loaded state overwrites the system's own `underflow_window_mclk`",
+    ),
+    "no-reset-requested": (
+        "system.rs",
+        "        cpu.request_reset();\n",
+        "",
+        "the CPU is put on the board without a reset: no start sequence, no reset vector",
+    ),
+    "seed-low-bits": (
+        "mt.rs",
+        "self.next_u32() >> (32 - k)",
+        "self.next_u32() & (u32::MAX >> (32 - k))",
+        "a seeded power-on takes the low bits of each random word",
+    ),
+}
+
+LOCKSTEP = [
+    ("rung 2", ["--only", "^(covell|base-probe)$"]),
+    ("rung 5", ["--only", "^(sock|mach|sw)-"]),
+    ("rung 4 (smoke)", ["--smoke"]),
+]
+LOCKSTEP_LATE = [
+    ("rung 3", ["--only", "^(pic|psg)-"]),
+    ("rung 4", ["--only", "^(lib|map)-"]),
+]
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--cache", type=Path, default=ROOT / "external" / "refcache")
+    parser.add_argument("--work", type=Path, default=ROOT / "external" / "faults")
+    parser.add_argument("--only")
+    parser.add_argument("--jobs", type=int, default=12)
+    parser.add_argument("--list", action="store_true")
+    args = parser.parse_args()
+    if args.list:
+        for name, (file, _, _, what) in FAULTS.items():
+            print(f"{name}\t{file}\t{what}")
+        return 0
+    missed = ran = 0
+    tree = args.work / "tree"
+    target = args.work / "target"
+    # The unfaulted board must pass the first checks, or every fault is "caught" by a case that
+    # cannot run (a missing image fails a case as surely as a difference does).
+    clean = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "lockstep.py"), "--reference-cache", str(args.cache),
+         "--traces", str(args.work / "traces"), "--jobs", str(args.jobs), "--no-narrow", "--quiet",
+         *LOCKSTEP[0][1]],
+        capture_output=True, text=True,
+    )  # fmt: skip
+    if clean.returncode:
+        print(f"the unfaulted board fails {LOCKSTEP[0][0]}; fix that first:\n{clean.stdout[-800:]}")
+        return 2
+    for name, (file, old, new, _) in FAULTS.items():
+        if args.only and name != args.only:
+            continue
+        ran += 1
+        for part in ("src", "tests"):
+            if (tree / part).exists():
+                shutil.rmtree(tree / part)
+            # shutil.copy, not copytree's copy2: a restored file with its old time looks older than
+            # the last fault's build to cargo, which then keeps that fault (found by
+            # supergrafx-rust, fixed 2026-11-19)
+            shutil.copytree(ROOT / part, tree / part, copy_function=shutil.copy)
+        manifest = (ROOT / "Cargo.toml").read_text().replace(
+            'path = "../huc6280-rust"', f'path = "{(ROOT.parent / "huc6280-rust").as_posix()}"'
+        )
+        (tree / "Cargo.toml").write_text(manifest)
+        shutil.copy(ROOT / "Cargo.lock", tree / "Cargo.lock")
+        # src/lib.rs includes the README as a doctest: without it `cargo test` fails whatever the
+        # fault, and every fault that reached the tests counted as caught (fixed 2026-11-19)
+        shutil.copy(ROOT / "README.md", tree / "README.md")
+        source = tree / "src" / file
+        text = (ROOT / "src" / file).read_text()
+        if text.count(old) != 1:
+            print(f"{name}: the fault's text is in {file} {text.count(old)} times, not once")
+            return 2
+        source.write_text(text.replace(old, new))
+        cargo = ["nice", "cargo", "--quiet", "--manifest-path", str(tree / "Cargo.toml")]
+        build = subprocess.run(
+            [*cargo[:2], "build", "--release", *cargo[2:], "--target-dir", str(target)],
+            capture_output=True, text=True,
+        )  # fmt: skip
+        if build.returncode:
+            print(f"{name}: does not build\n{build.stderr[-800:]}")
+            return 2
+        binaries = target / "release"
+
+        def lockstep(extra: list[str]) -> str | None:
+            done = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "lockstep.py"), "--rust", str(binaries / "pce-trace"),
+                 "--reference-cache", str(args.cache), "--traces", str(args.work / "traces"),
+                 "--jobs", str(args.jobs), "--no-narrow", "--quiet", *extra],
+                capture_output=True, text=True,
+            )  # fmt: skip
+            if done.returncode == 0:
+                return None
+            return next((line.split(":")[0] for line in done.stdout.splitlines()
+                         if line and not line.startswith(" ") and ": " in line), "?")  # fmt: skip
+
+        caught = None
+        for label, extra in LOCKSTEP:
+            first = lockstep(extra)
+            if first is not None:
+                caught = f"{label}: {first}"
+                break
+        if caught is None:
+            tests = subprocess.run(
+                [*cargo[:2], "test", "--release", *cargo[2:], "--target-dir", str(target)],
+                capture_output=True, text=True,
+            )  # fmt: skip
+            if tests.returncode:
+                # `cargo test --quiet` names a failed test under "failures:", indented
+                out = tests.stdout.splitlines()
+                failed = [line.strip() for n, line in enumerate(out)
+                          if line.startswith("    ") and " " not in line.strip()
+                          and "failures:" in out[:n]]  # fmt: skip
+                caught = f"tests: {failed[0] if failed else '?'}"
+        if caught is None:
+            for label, extra in LOCKSTEP_LATE:
+                first = lockstep(extra)
+                if first is not None:
+                    caught = f"{label}: {first}"
+                    break
+        if caught is None:
+            states = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "state_roundtrip.py"), "--binary",
+                 str(binaries / "pce-state-roundtrip"), "--jobs", str(args.jobs)],
+                capture_output=True, text=True,
+            )  # fmt: skip
+            if states.returncode:
+                first = next((line.split(":")[0] for line in states.stdout.splitlines() if "FAIL" in line), "?")
+                caught = f"rung 6: {first}"
+        print(f"{name}: {'caught by ' + caught if caught else 'MISSED'}", flush=True)
+        missed += caught is None
+    print(f"{ran - missed} caught, {missed} missed")
+    return 1 if missed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

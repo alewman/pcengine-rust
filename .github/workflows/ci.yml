@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: MIT
+name: CI
+
+# Kept small: main and pull requests, superseded runs cancelled. The lockstep
+# gate (rungs 2-7) needs the HuCard library, which is the user's, and runs by
+# hand (README). CI runs the build, the tests that need no ROM (the sockets,
+# the pads, the mappers on synthetic images, the save-state round trip and
+# refusals on a synthetic card) and rung 1 on Covell's CPU test, fetched by
+# the pin pcengine-python uses. huc6280-rust comes in by its git pin (Cargo.toml).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: fmt, clippy, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --release --all-targets -- -D warnings
+      - run: cargo test --release
+
+  covell:
+    name: "rung 1: Covell's CPU test runs"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: scripts/fetch_covell.sh
+      - run: scripts/rung1.sh external/covell/CPU_Test_10.pce

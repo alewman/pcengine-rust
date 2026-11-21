@@ -1,0 +1,276 @@
+# name	frames	image	arguments (written by scripts/make_cases.py)
+covell	60	$COVELL	
+pic-Aero Blasters (USA)	600	$LIB/Aero Blasters (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-After Burner II (Japan) (En)	600	$LIB/After Burner II (Japan) (En).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Air Zonk (USA)	600	$LIB/Air Zonk (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Alien Crush (USA)	600	$LIB/Alien Crush (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Andre Panza Kick Boxing (USA)	600	$LIB/Andre Panza Kick Boxing (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Armed F (Japan) (En)	600	$LIB/Armed F (Japan) (En).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Atomic Robo-Kid Special (Japan) (En)	600	$LIB/Atomic Robo-Kid Special (Japan) (En).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Ballistix (USA)	600	$LIB/Ballistix (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Barbarian (World) (Amiga 500) (Aftermarket) (Unl)	600	$LIB/Barbarian (World) (Amiga 500) (Aftermarket) (Unl).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Barbarian (World) (Amstrad CPC) (Aftermarket) (Unl)	600	$LIB/Barbarian (World) (Amstrad CPC) (Aftermarket) (Unl).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Blazing Lazers (USA)	600	$LIB/Blazing Lazers (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-R-Type (USA)	600	$LIB/R-Type (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Bonk's Adventure (USA)	600	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Samurai-Ghost (USA)	600	$LIB/Samurai-Ghost (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Barbarian (World) (ZX Spectrum) (Aftermarket) (Unl)	600	$LIB/Barbarian (World) (ZX Spectrum) (Aftermarket) (Unl).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Death Sword (World) (PC) (Aftermarket) (Unl)	600	$LIB/Death Sword (World) (PC) (Aftermarket) (Unl).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Mai Nurse (World) (Aftermarket) (Unl)	600	$LIB/Mai Nurse (World) (Aftermarket) (Unl).7z	--press run@250+10 --press i@400+6 --press right-ii@480+40
+pic-Gunboat (USA)	600	$LIB/Gunboat (USA).7z	--machine tg16 --press run@250+10 --press i@400+6 --press right-ii@480+40
+psg-Aero Blasters (USA)	900	$LIB/Aero Blasters (USA).7z	--machine tg16 --press run@200+10 --press run@420+10 --press i-right@600+120
+psg-Alien Crush (USA)	900	$LIB/Alien Crush (USA).7z	--machine tg16 --press run@200+10 --press run@420+10 --press i-right@600+120
+psg-Blazing Lazers (USA)	900	$LIB/Blazing Lazers (USA).7z	--machine tg16 --press run@200+10 --press run@420+10 --press i-right@600+120
+psg-Bonk's Adventure (USA)	900	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --press run@200+10 --press run@420+10 --press i-right@600+120
+psg-Samurai-Ghost (USA)	900	$LIB/Samurai-Ghost (USA).7z	--machine tg16 --press run@200+10 --press run@420+10 --press i-right@600+120
+lib-Aero Blasters (USA)	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --press run@200+10
+lib-After Burner II (Japan) (En)	300	$LIB/After Burner II (Japan) (En).7z	--press run@200+10
+lib-Air Zonk (USA)	300	$LIB/Air Zonk (USA).7z	--machine tg16 --press run@200+10
+lib-Alien Crush (USA)	300	$LIB/Alien Crush (USA).7z	--machine tg16 --press run@200+10
+lib-Andre Panza Kick Boxing (USA)	300	$LIB/Andre Panza Kick Boxing (USA).7z	--machine tg16 --press run@200+10
+lib-Armed F (Japan) (En)	300	$LIB/Armed F (Japan) (En).7z	--press run@200+10
+lib-Atomic Robo-Kid Special (Japan) (En)	300	$LIB/Atomic Robo-Kid Special (Japan) (En).7z	--press run@200+10
+lib-Ballistix (USA)	300	$LIB/Ballistix (USA).7z	--machine tg16 --press run@200+10
+lib-Barbarian (World) (Amiga 500) (Aftermarket) (Unl)	300	$LIB/Barbarian (World) (Amiga 500) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Barbarian (World) (Amstrad CPC) (Aftermarket) (Unl)	300	$LIB/Barbarian (World) (Amstrad CPC) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Barbarian (World) (Atari ST) (Aftermarket) (Unl)	300	$LIB/Barbarian (World) (Atari ST) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Barbarian (World) (Commodore 64) (Aftermarket) (Unl)	300	$LIB/Barbarian (World) (Commodore 64) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Barbarian (World) (ZX Spectrum) (Aftermarket) (Unl)	300	$LIB/Barbarian (World) (ZX Spectrum) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Batman (Japan) (En)	300	$LIB/Batman (Japan) (En).7z	--press run@200+10
+lib-Battle Lode Runner (Japan) (En)	300	$LIB/Battle Lode Runner (Japan) (En).7z	--press run@200+10
+lib-Battle Royale (USA)	300	$LIB/Battle Royale (USA).7z	--machine tg16 --press run@200+10
+lib-Binary Star (World) (Audio) (Aftermarket) (Unl)	300	$LIB/Binary Star (World) (Audio) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Blazing Lazers (USA)	300	$LIB/Blazing Lazers (USA).7z	--machine tg16 --press run@200+10
+lib-Bloody Wolf (USA)	300	$LIB/Bloody Wolf (USA).7z	--machine tg16 --press run@200+10
+lib-Bomberman '93 (USA)	300	$LIB/Bomberman '93 (USA).7z	--machine tg16 --press run@200+10
+lib-Bomberman '94 (Japan)	300	$LIB/Bomberman '94 (Japan).7z	--press run@200+10
+lib-Bomberman (USA)	300	$LIB/Bomberman (USA).7z	--machine tg16 --press run@200+10
+lib-Bonk 3 - Bonk's Big Adventure (USA)	300	$LIB/Bonk 3 - Bonk's Big Adventure (USA).7z	--machine tg16 --press run@200+10
+lib-Bonk's Adventure (USA)	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --press run@200+10
+lib-Bonk's Revenge (USA)	300	$LIB/Bonk's Revenge (USA).7z	--machine tg16 --press run@200+10
+lib-Boxyboy (USA)	300	$LIB/Boxyboy (USA).7z	--machine tg16 --press run@200+10
+lib-Bravoman (USA)	300	$LIB/Bravoman (USA).7z	--machine tg16 --press run@200+10
+lib-Break In (Japan) (En)	300	$LIB/Break In (Japan) (En).7z	--press run@200+10
+lib-Bug Hunt (World) (NEO Coding Compo 2013) (Aftermarket) (Unl)	300	$LIB/Bug Hunt (World) (NEO Coding Compo 2013) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Cadash (USA)	300	$LIB/Cadash (USA).7z	--machine tg16 --press run@200+10
+lib-Champion Wrestler (Japan) (En)	300	$LIB/Champion Wrestler (Japan) (En).7z	--press run@200+10
+lib-Champions Forever Boxing (USA)	300	$LIB/Champions Forever Boxing (USA).7z	--machine tg16 --press run@200+10
+lib-Chase H.Q. (USA)	300	$LIB/Chase H.Q. (USA).7z	--machine tg16 --press run@200+10
+lib-Chew-Man-Fu (USA)	300	$LIB/Chew-Man-Fu (USA).7z	--machine tg16 --press run@200+10
+lib-China Warrior (USA)	300	$LIB/China Warrior (USA).7z	--machine tg16 --press run@200+10
+lib-Circus Lido (Japan) (En)	300	$LIB/Circus Lido (Japan) (En).7z	--press run@200+10
+lib-Crash (World) (v1.01) (Aftermarket) (Unl)	300	$LIB/Crash (World) (v1.01) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Cratermaze (USA)	300	$LIB/Cratermaze (USA).7z	--machine tg16 --press run@200+10
+lib-Cross Wiber - Cyber Combat Police (Japan) (En)	300	$LIB/Cross Wiber - Cyber Combat Police (Japan) (En).7z	--press run@200+10
+lib-Cyber Dodge (Japan) (En)	300	$LIB/Cyber Dodge (Japan) (En).7z	--press run@200+10
+lib-Cyber-Core (USA)	300	$LIB/Cyber-Core (USA).7z	--machine tg16 --press run@200+10
+lib-Daisenpuu (Japan) (En)	300	$LIB/Daisenpuu (Japan) (En).7z	--press run@200+10
+lib-Darius Alpha (Japan) (En) (SG Enhanced)	300	$LIB/Darius Alpha (Japan) (En) (SG Enhanced).7z	--press run@200+10
+lib-Darius Plus (Japan) (En) (SG Enhanced)	300	$LIB/Darius Plus (Japan) (En) (SG Enhanced).7z	--press run@200+10
+lib-Darkwing Duck (USA)	300	$LIB/Darkwing Duck (USA).7z	--machine tg16 --press run@200+10
+lib-Davis Cup Tennis (USA)	300	$LIB/Davis Cup Tennis (USA).7z	--machine tg16 --press run@200+10
+lib-Dead Moon (USA)	300	$LIB/Dead Moon (USA).7z	--machine tg16 --press run@200+10
+lib-Death Sword (World) (Apple II) (Aftermarket) (Unl)	300	$LIB/Death Sword (World) (Apple II) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Death Sword (World) (PC) (Aftermarket) (Unl)	300	$LIB/Death Sword (World) (PC) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Deep Blue (USA)	300	$LIB/Deep Blue (USA).7z	--machine tg16 --press run@200+10
+lib-Devil's Crush (USA)	300	$LIB/Devil's Crush (USA).7z	--machine tg16 --press run@200+10
+lib-Dinoforce (Japan) (En) (Aftermarket) (Unl)	300	$LIB/Dinoforce (Japan) (En) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Double Dungeons (USA)	300	$LIB/Double Dungeons (USA).7z	--machine tg16 --press run@200+10
+lib-Dragon Saber (Japan) (En)	300	$LIB/Dragon Saber (Japan) (En).7z	--press run@200+10
+lib-Dragon Spirit (USA)	300	$LIB/Dragon Spirit (USA).7z	--machine tg16 --press run@200+10
+lib-Dragon's Curse (USA)	300	$LIB/Dragon's Curse (USA).7z	--machine tg16 --press run@200+10
+lib-Drop Off (USA)	300	$LIB/Drop Off (USA).7z	--machine tg16 --press run@200+10
+lib-Dungeon Explorer (USA)	300	$LIB/Dungeon Explorer (USA).7z	--machine tg16 --press run@200+10
+lib-Dungeons & Dragons - Order of the Griffon (USA)	300	$LIB/Dungeons & Dragons - Order of the Griffon (USA).7z	--machine tg16 --press run@200+10
+lib-F1 Triple Battle (Japan) (En)	300	$LIB/F1 Triple Battle (Japan) (En).7z	--press run@200+10
+lib-Falcon (USA)	300	$LIB/Falcon (USA).7z	--machine tg16 --press run@200+10
+lib-Fantasy Zone (Japan) (En)	300	$LIB/Fantasy Zone (Japan) (En).7z	--press run@200+10
+lib-Fantasy Zone (USA)	300	$LIB/Fantasy Zone (USA).7z	--machine tg16 --press run@200+10
+lib-Final Blaster (Japan) (En)	300	$LIB/Final Blaster (Japan) (En).7z	--press run@200+10
+lib-Final Lap Twin (USA)	300	$LIB/Final Lap Twin (USA).7z	--machine tg16 --press run@200+10
+lib-Final Soldier (Japan) (En)	300	$LIB/Final Soldier (Japan) (En).7z	--press run@200+10
+lib-Formation Soccer - Human Cup '90 (Japan) (En)	300	$LIB/Formation Soccer - Human Cup '90 (Japan) (En).7z	--press run@200+10
+lib-Galaga '90 (USA)	300	$LIB/Galaga '90 (USA).7z	--machine tg16 --press run@200+10
+lib-Ghost Manor (USA)	300	$LIB/Ghost Manor (USA).7z	--machine tg16 --press run@200+10
+lib-Gomola Speed (Japan) (En)	300	$LIB/Gomola Speed (Japan) (En).7z	--press run@200+10
+lib-Gradius (Japan) (En)	300	$LIB/Gradius (Japan) (En).7z	--press run@200+10
+lib-Great Fumo Binning, The (World) (Aftermarket) (Unl)	300	$LIB/Great Fumo Binning, The (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Gunboat (USA)	300	$LIB/Gunboat (USA).7z	--machine tg16 --press run@200+10
+lib-Gunhed - Special Version (Japan) (En)	300	$LIB/Gunhed - Special Version (Japan) (En).7z	--press run@200+10
+lib-Hatris (Japan) (En)	300	$LIB/Hatris (Japan) (En).7z	--press run@200+10
+lib-Heavy Unit (Japan) (En)	300	$LIB/Heavy Unit (Japan) (En).7z	--press run@200+10
+lib-Hit the Ice - VHL - The Official Video Hockey League (USA)	300	$LIB/Hit the Ice - VHL - The Official Video Hockey League (USA).7z	--machine tg16 --press run@200+10
+lib-HuZERO (World) (Aftermarket) (Unl)	300	$LIB/HuZERO (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Humpball (World) (Aftermarket) (Unl)	300	$LIB/Humpball (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-ImageFight (Japan) (En)	300	$LIB/ImageFight (Japan) (En).7z	--press run@200+10
+lib-Impossamole (USA)	300	$LIB/Impossamole (USA).7z	--machine tg16 --press run@200+10
+lib-Island Adventure (World) (NEO Coding Compo 2012) (Aftermarket) (Unl)	300	$LIB/Island Adventure (World) (NEO Coding Compo 2012) (Aftermarket) (Unl).7z	--press run@200+10
+lib-J.J. & Jeff (USA)	300	$LIB/J.J. & Jeff (USA).7z	--machine tg16 --press run@200+10
+lib-Jack Nicklaus' Turbo Golf (USA)	300	$LIB/Jack Nicklaus' Turbo Golf (USA).7z	--machine tg16 --press run@200+10
+lib-Jackie Chan (Japan)	300	$LIB/Jackie Chan (Japan).7z	--press run@200+10
+lib-Jackie Chan's Action Kung Fu (USA)	300	$LIB/Jackie Chan's Action Kung Fu (USA).7z	--machine tg16 --press run@200+10
+lib-Keith Courage in Alpha Zones (USA)	300	$LIB/Keith Courage in Alpha Zones (USA).7z	--machine tg16 --press run@200+10
+lib-Kiki Kaikai (Japan) (En)	300	$LIB/Kiki Kaikai (Japan) (En).7z	--press run@200+10
+lib-King of Casino (USA)	300	$LIB/King of Casino (USA).7z	--machine tg16 --press run@200+10
+lib-Klax (USA)	300	$LIB/Klax (USA).7z	--machine tg16 --press run@200+10
+lib-Kyuukyoku Tiger (Japan) (En)	300	$LIB/Kyuukyoku Tiger (Japan) (En).7z	--press run@200+10
+lib-Legend of Hero Tonma (USA)	300	$LIB/Legend of Hero Tonma (USA).7z	--machine tg16 --press run@200+10
+lib-Legendary Axe II (USA)	300	$LIB/Legendary Axe II (USA).7z	--machine tg16 --press run@200+10
+lib-Legendary Axe, The (USA)	300	$LIB/Legendary Axe, The (USA).7z	--machine tg16 --press run@200+10
+lib-Loop 2 (World) (Aftermarket) (Unl)	300	$LIB/Loop 2 (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Magical Chase (USA)	300	$LIB/Magical Chase (USA).7z	--machine tg16 --press run@200+10
+lib-Mai Nurse (World) (Aftermarket) (Unl)	300	$LIB/Mai Nurse (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Maria (World) (Aftermarket) (Unl)	300	$LIB/Maria (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Mega Man (World) (v1.01) (Aftermarket) (Unl)	300	$LIB/Mega Man (World) (v1.01) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Metal Stoker (Japan) (En)	300	$LIB/Metal Stoker (Japan) (En).7z	--press run@200+10
+lib-Meteor Blaster DX (World) (v1.01) (Aftermarket) (Unl)	300	$LIB/Meteor Blaster DX (World) (v1.01) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Military Madness (USA)	300	$LIB/Military Madness (USA).7z	--machine tg16 --press run@200+10
+lib-Moto Roader (USA)	300	$LIB/Moto Roader (USA).7z	--machine tg16 --press run@200+10
+lib-Moto Roader II (Japan) (En)	300	$LIB/Moto Roader II (Japan) (En).7z	--press run@200+10
+lib-Nantettatte Engine (World) (Aftermarket) (Unl)	300	$LIB/Nantettatte Engine (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Neutopia (USA)	300	$LIB/Neutopia (USA).7z	--machine tg16 --press run@200+10
+lib-Neutopia II (USA)	300	$LIB/Neutopia II (USA).7z	--machine tg16 --press run@200+10
+lib-New Adventure Island (USA)	300	$LIB/New Adventure Island (USA).7z	--machine tg16 --press run@200+10
+lib-NewZealand Story, The (Japan) (En)	300	$LIB/NewZealand Story, The (Japan) (En).7z	--press run@200+10
+lib-Night Creatures (USA)	300	$LIB/Night Creatures (USA).7z	--machine tg16 --press run@200+10
+lib-Ninja Ryuuken Den (Japan) (En,Ja,Zh)	300	$LIB/Ninja Ryuuken Den (Japan) (En,Ja,Zh).7z	--press run@200+10
+lib-Ninja Spirit (USA)	300	$LIB/Ninja Spirit (USA).7z	--machine tg16 --press run@200+10
+lib-Ordyne (Japan)	300	$LIB/Ordyne (Japan).7z	--press run@200+10
+lib-Ordyne (USA)	300	$LIB/Ordyne (USA).7z	--machine tg16 --press run@200+10
+lib-OutRun (Japan) (En)	300	$LIB/OutRun (Japan) (En).7z	--press run@200+10
+lib-Override (Japan) (En)	300	$LIB/Override (Japan) (En).7z	--press run@200+10
+lib-P-47 - The Freedom Fighter (Japan) (En)	300	$LIB/P-47 - The Freedom Fighter (Japan) (En).7z	--press run@200+10
+lib-Pac-Land (USA)	300	$LIB/Pac-Land (USA).7z	--machine tg16 --press run@200+10
+lib-Parasol Stars - The Story of Bubble Bobble III (USA)	300	$LIB/Parasol Stars - The Story of Bubble Bobble III (USA).7z	--machine tg16 --press run@200+10
+lib-Parodius Da! - Shinwa kara Owarai e (Japan) (En)	300	$LIB/Parodius Da! - Shinwa kara Owarai e (Japan) (En).7z	--press run@200+10
+lib-Populous (Japan) (En)	300	$LIB/Populous (Japan) (En).7z	--press run@200+10
+lib-Power Drift (Japan) (En)	300	$LIB/Power Drift (Japan) (En).7z	--press run@200+10
+lib-Power Golf (USA)	300	$LIB/Power Golf (USA).7z	--machine tg16 --press run@200+10
+lib-Psycho Chaser (Japan) (En)	300	$LIB/Psycho Chaser (Japan) (En).7z	--press run@200+10
+lib-Psychosis (USA)	300	$LIB/Psychosis (USA).7z	--machine tg16 --press run@200+10
+lib-Puzznic (Japan) (En)	300	$LIB/Puzznic (Japan) (En).7z	--press run@200+10
+lib-R-Type (USA)	300	$LIB/R-Type (USA).7z	--machine tg16 --press run@200+10
+lib-R-Type I (Japan) (En)	300	$LIB/R-Type I (Japan) (En).7z	--press run@200+10
+lib-Raiden (USA)	300	$LIB/Raiden (USA).7z	--machine tg16 --press run@200+10
+lib-Rastan Saga II (Japan) (En)	300	$LIB/Rastan Saga II (Japan) (En).7z	--press run@200+10
+lib-Reflectron (World) (Aftermarket) (Unl)	300	$LIB/Reflectron (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Salamander (Japan) (En)	300	$LIB/Salamander (Japan) (En).7z	--press run@200+10
+lib-Samurai-Ghost (USA)	300	$LIB/Samurai-Ghost (USA).7z	--machine tg16 --press run@200+10
+lib-Santatlantean (World) (Aftermarket) (Unl)	300	$LIB/Santatlantean (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Shinobi (Japan)	300	$LIB/Shinobi (Japan).7z	--press run@200+10
+lib-Shockman (USA)	300	$LIB/Shockman (USA).7z	--machine tg16 --press run@200+10
+lib-SideArms (USA)	300	$LIB/SideArms (USA).7z	--machine tg16 --press run@200+10
+lib-Silent Debuggers (USA)	300	$LIB/Silent Debuggers (USA).7z	--machine tg16 --press run@200+10
+lib-Sinistron (USA)	300	$LIB/Sinistron (USA).7z	--machine tg16 --press run@200+10
+lib-Skweek (Japan) (En)	300	$LIB/Skweek (Japan) (En).7z	--press run@200+10
+lib-Soldier Blade (USA)	300	$LIB/Soldier Blade (USA).7z	--machine tg16 --press run@200+10
+lib-Somer Assault (USA)	300	$LIB/Somer Assault (USA).7z	--machine tg16 --press run@200+10
+lib-Sonic Spike - World Championship Beach Volleyball (USA)	300	$LIB/Sonic Spike - World Championship Beach Volleyball (USA).7z	--machine tg16 --press run@200+10
+lib-Space Harrier (USA)	300	$LIB/Space Harrier (USA).7z	--machine tg16 --press run@200+10
+lib-Spin Pair (Japan) (En)	300	$LIB/Spin Pair (Japan) (En).7z	--press run@200+10
+lib-Splatterhouse (USA)	300	$LIB/Splatterhouse (USA).7z	--machine tg16 --press run@200+10
+lib-Super Metal Crusher (Japan) (En)	300	$LIB/Super Metal Crusher (Japan) (En).7z	--press run@200+10
+lib-Super Star Soldier (Japan)	300	$LIB/Super Star Soldier (Japan).7z	--press run@200+10
+lib-Super Star Soldier (USA)	300	$LIB/Super Star Soldier (USA).7z	--machine tg16 --press run@200+10
+lib-Super Volleyball (USA)	300	$LIB/Super Volleyball (USA).7z	--machine tg16 --press run@200+10
+lib-TV Sports Basketball (USA)	300	$LIB/TV Sports Basketball (USA).7z	--machine tg16 --press run@200+10
+lib-TV Sports Football (USA)	300	$LIB/TV Sports Football (USA).7z	--machine tg16 --press run@200+10
+lib-TV Sports Hockey (USA)	300	$LIB/TV Sports Hockey (USA).7z	--machine tg16 --press run@200+10
+lib-Takin' It to the Hoop (USA)	300	$LIB/Takin' It to the Hoop (USA).7z	--machine tg16 --press run@200+10
+lib-TaleSpin (USA)	300	$LIB/TaleSpin (USA).7z	--machine tg16 --press run@200+10
+lib-Tatsujin (Japan) (En)	300	$LIB/Tatsujin (Japan) (En).7z	--press run@200+10
+lib-Tenseiryuu - Saint Dragon (Japan) (En)	300	$LIB/Tenseiryuu - Saint Dragon (Japan) (En).7z	--press run@200+10
+lib-Terra Cresta II - Mandoler no Gyakushuu (Japan) (En)	300	$LIB/Terra Cresta II - Mandoler no Gyakushuu (Japan) (En).7z	--press run@200+10
+lib-Thunder Blade (Japan) (En)	300	$LIB/Thunder Blade (Japan) (En).7z	--press run@200+10
+lib-Tiger Road (USA)	300	$LIB/Tiger Road (USA).7z	--machine tg16 --press run@200+10
+lib-Time Cruise (USA)	300	$LIB/Time Cruise (USA).7z	--machine tg16 --press run@200+10
+lib-Timeball (USA)	300	$LIB/Timeball (USA).7z	--machine tg16 --press run@200+10
+lib-Titan (Japan) (En)	300	$LIB/Titan (Japan) (En).7z	--press run@200+10
+lib-Tongueman's Logic (World) (Aftermarket) (Unl)	300	$LIB/Tongueman's Logic (World) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Toy Shop Boys (Japan) (En)	300	$LIB/Toy Shop Boys (Japan) (En).7z	--press run@200+10
+lib-Tricky Kick (USA)	300	$LIB/Tricky Kick (USA).7z	--machine tg16 --press run@200+10
+lib-Turrican (USA)	300	$LIB/Turrican (USA).7z	--machine tg16 --press run@200+10
+lib-UWOL - Quest for Money (World) (v1.1) (Aftermarket) (Unl)	300	$LIB/UWOL - Quest for Money (World) (v1.1) (Aftermarket) (Unl).7z	--press run@200+10
+lib-Valkyrie no Densetsu (Japan)	300	$LIB/Valkyrie no Densetsu (Japan).7z	--press run@200+10
+lib-Veigues - Tactical Gladiator (USA)	300	$LIB/Veigues - Tactical Gladiator (USA).7z	--machine tg16 --press run@200+10
+lib-Victory Run (USA)	300	$LIB/Victory Run (USA).7z	--machine tg16 --press run@200+10
+lib-Vigilante (USA)	300	$LIB/Vigilante (USA).7z	--machine tg16 --press run@200+10
+lib-Volfied (Japan) (En)	300	$LIB/Volfied (Japan) (En).7z	--press run@200+10
+lib-W Ring - The Double Rings (Japan) (En)	300	$LIB/W Ring - The Double Rings (Japan) (En).7z	--press run@200+10
+lib-World Class Baseball (USA)	300	$LIB/World Class Baseball (USA).7z	--machine tg16 --press run@200+10
+lib-World Court Tennis (USA)	300	$LIB/World Court Tennis (USA).7z	--machine tg16 --press run@200+10
+lib-World Sports Competition (USA)	300	$LIB/World Sports Competition (USA).7z	--machine tg16 --press run@200+10
+lib-Yo' Bro (USA)	300	$LIB/Yo' Bro (USA).7z	--machine tg16 --press run@200+10
+lib-Zipang (Japan) (En)	300	$LIB/Zipang (Japan) (En).7z	--press run@200+10
+map-sf2	300	$SF2	--press run@200+10
+base-probe	120	$PROBE	
+sock-card-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --device lockstep-card --press run@200+10
+sock-card-probe	120	$PROBE	--device lockstep-card
+sock-port-lazers	300	$LIB/Blazing Lazers (USA).7z	--machine tg16 --device lockstep-port --press run@200+10
+sock-port-probe	120	$PROBE	--device lockstep-port
+sock-path-rtype	300	$LIB/R-Type (USA).7z	--machine tg16 --device lockstep-path --seed 7 --press run@200+10
+sock-path-probe	120	$PROBE	--device lockstep-path --seed 7
+sock-pad6-sf2	400	$SF2	--device pad6 --press run@200+10 --press iii-vi@260+30 --press run@300+10 --press iv-v-up@330+40
+sock-pad6-probe	120	$PROBE	--device pad6 --press iii-v-up@20+60 --press run-vi@50+30
+sock-multitap-bomberman94	400	$LIB/Bomberman '94 (Japan).7z	--device multitap --press run@200+10 --press run@280+10 --press i-left@330+40
+sock-multitap-probe	120	$PROBE	--device multitap --press iii-v-up@20+60 --press run-ii@50+30
+sock-multitap-clr-low-probe	120	$PROBE	--device multitap-clr-low --press iii-v-up@20+60 --press run-ii@50+30
+sock-no-pad-probe	120	$PROBE	--device none
+sock-fake-controller-probe	120	$PROBE	--device fake-controller
+sock-tennokoe-probe	120	$PROBE	--device tennokoe
+mach-pce-lazers	300	$LIB/Blazing Lazers (USA).7z	--press run@200+10
+mach-tg16-gradius	300	$LIB/Gradius (Japan) (En).7z	--machine tg16 --press run@200+10
+mach-tg16-probe	120	$PROBE	--machine tg16
+sw-seed-probe	120	$PROBE	--seed 1234
+sw-start-line-probe	120	$PROBE	--start-line 260
+sw-start-offset-probe	120	$PROBE	--start-offset 500
+sw-vblank-none-probe	120	$PROBE	--vblank-dots none
+sw-vblank-0-probe	120	$PROBE	--vblank-dots 0
+sw-vblank-18-probe	120	$PROBE	--vblank-dots -18
+sw-no-dma-resume-probe	120	$PROBE	--no-dma-resume
+sw-timer-window-0-probe	120	$PROBE	--timer-window 0
+sw-timer-window-1-probe	120	$PROBE	--timer-window 1
+sw-timer-window-15-probe	120	$PROBE	--timer-window 15
+sw-no-bit2-lines-probe	120	$PROBE	--no-bit2-lines
+sw-psg-mame-probe	120	$PROBE	--psg-variant mame
+sw-psg-mednafen-probe	120	$PROBE	--psg-variant mednafen
+sw-psg-write_wave_while_playing-probe	120	$PROBE	--psg write_wave_while_playing=true
+sw-psg-dda_latch_needs_on-probe	120	$PROBE	--psg dda_latch_needs_on=true
+sw-psg-r6_overrides_sample_while_on-probe	120	$PROBE	--psg r6_overrides_sample_while_on=true
+sw-psg-keyon_mode-probe	120	$PROBE	--psg keyon_mode=resume_step
+sw-psg-lfo_requires_ch2_on-probe	120	$PROBE	--psg lfo_requires_ch2_on=false
+sw-psg-lfo_zero_multiplier-probe	120	$PROBE	--psg lfo_zero_multiplier=1
+sw-psg-lfo_mask12-probe	120	$PROBE	--psg lfo_mask12=false
+sw-psg-lf_trg_halts_always-probe	120	$PROBE	--psg lf_trg_halts_always=false
+sw-psg-scale_table_quirk-probe	120	$PROBE	--psg scale_table_quirk=true
+sw-psg-silent_units-probe	120	$PROBE	--psg silent_units=31
+sw-psg-render_audio-probe	120	$PROBE	--psg render_audio=false
+sw-psg-noise_zero_period-probe	120	$PROBE	--psg noise_zero_period=1
+sw-psg-noise_free_running-probe	120	$PROBE	--psg noise_free_running=false
+sw-seed-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --seed 1234 --press run@200+10
+sw-start-line-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --start-line 260 --press run@200+10
+sw-start-offset-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --start-offset 500 --press run@200+10
+sw-vblank-none-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vblank-dots none --press run@200+10
+sw-vblank-0-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vblank-dots 0 --press run@200+10
+sw-vblank-18-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --vblank-dots -18 --press run@200+10
+sw-no-dma-resume-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --no-dma-resume --press run@200+10
+sw-timer-window-0-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --timer-window 0 --press run@200+10
+sw-timer-window-1-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --timer-window 1 --press run@200+10
+sw-timer-window-15-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --timer-window 15 --press run@200+10
+sw-no-bit2-lines-bonk	300	$LIB/Bonk's Adventure (USA).7z	--machine tg16 --no-bit2-lines --press run@200+10
+sw-psg-mame-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg-variant mame --press run@200+10
+sw-psg-mednafen-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg-variant mednafen --press run@200+10
+sw-psg-write_wave_while_playing-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg write_wave_while_playing=true --press run@200+10
+sw-psg-dda_latch_needs_on-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg dda_latch_needs_on=true --press run@200+10
+sw-psg-r6_overrides_sample_while_on-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg r6_overrides_sample_while_on=true --press run@200+10
+sw-psg-keyon_mode-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg keyon_mode=resume_step --press run@200+10
+sw-psg-lfo_requires_ch2_on-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg lfo_requires_ch2_on=false --press run@200+10
+sw-psg-lfo_zero_multiplier-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg lfo_zero_multiplier=1 --press run@200+10
+sw-psg-lfo_mask12-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg lfo_mask12=false --press run@200+10
+sw-psg-lf_trg_halts_always-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg lf_trg_halts_always=false --press run@200+10
+sw-psg-scale_table_quirk-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg scale_table_quirk=true --press run@200+10
+sw-psg-silent_units-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg silent_units=31 --press run@200+10
+sw-psg-render_audio-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg render_audio=false --press run@200+10
+sw-psg-noise_zero_period-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg noise_zero_period=1 --press run@200+10
+sw-psg-noise_free_running-aero	300	$LIB/Aero Blasters (USA).7z	--machine tg16 --psg noise_free_running=false --press run@200+10
+sw-timer-window-0-battle-royale	300	$LIB/Battle Royale (USA).7z	--machine tg16 --timer-window 0 --press run@200+10
