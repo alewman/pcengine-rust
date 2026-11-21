@@ -5,6 +5,15 @@ Not on crates.io; pin a commit (README, "Using it").
 
 ## Unreleased
 
+### Pinned by git revision (2026-11-20)
+
+- **huc6280-rust is a git pin again** (`e1d24a3`, on GitHub since 2026-11-20), not a path to a
+  sibling clone; `Cargo.toml` names the `--config` patch that builds against a local checkout.
+  CI no longer clones it beside the checkout.
+- `scripts/fetch_pcenginepython.sh` with `CORE_SOURCE` installs the core with its dependencies:
+  `--no-deps` had left out 6502-python, the core's frame. Its comments no longer say the
+  reference is local only.
+
 ### The early display start (pcengine-python `03ac699`)
 
 - **A display that starts before the row is cropped** (`vdc/chip.rs` `render_line`, transcribed

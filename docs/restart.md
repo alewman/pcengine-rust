@@ -75,9 +75,9 @@ behaviour was decided here.
 huc6280-rust's clean rewrite (from huc6280-python `6ce348e`): decimal `ADC`/`SBC` re-derived,
 `VanishedInterrupt::Latched` and `IrqPollCycle::Mednafen` withdrawn, `CpuState::polled_irq_lines`
 `None` after a boundary that decides an interrupt. The board uses neither withdrawn mode, so
-nothing here changed for it; its defaults are cycle-identical. It is not on GitHub yet, so
-`Cargo.toml` takes it by path from a sibling clone (`../huc6280-rust`, checked out at `e1d24a3`)
-and names the git pin to use once it is pushed; CI clones it there by that revision.
+nothing here changed for it; its defaults are cycle-identical. It was not on GitHub yet, so
+`Cargo.toml` took it by path from a sibling clone (`../huc6280-rust`, checked out at `e1d24a3`);
+since the push of 2026-11-20 it is the git pin at that revision again.
 
 ## The gate, before and after
 

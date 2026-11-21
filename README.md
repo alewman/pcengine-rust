@@ -7,7 +7,7 @@
 A Rust **PC Engine / TurboGrafx-16** board transcribed from
 [pcengine-python](https://github.com/alewman/pcengine-python) at `03ac699`
 (its clean rewrite of 2026-11-19, `3318027`, and the crop of a display that starts
-before the row; local, not on GitHub yet)
+before the row)
 and proven equivalent to it: every CPU bus cycle
 (physical address, value, kind, master clock), every frame's picture at the
 9-bit palette value, every mixed audio sample and the CPU's state, frame by
@@ -16,7 +16,7 @@ frame, on the whole HuCard library. pcengine-python is the specification
 photographs); this board adds nothing and tunes nothing. Its CPU is
 [huc6280-rust](https://github.com/alewman/huc6280-rust) (crate `huc6280`,
 at `e1d24a3`, transcribed from huc6280-python `6ce348e`, the revision
-pcengine-python `3318027` pins; both local, not on GitHub yet). The add-ons
+pcengine-python `3318027` pins). The add-ons
 [supergrafx-rust](https://github.com/alewman/supergrafx-rust) and
 [pcenginecd-rust](https://github.com/alewman/pcenginecd-rust) plug into its
 socket traits, and
@@ -83,9 +83,8 @@ pcengine-rust = { git = "https://github.com/alewman/pcengine-rust", rev = "<comm
 ```
 
 (Pin the commit you have checked; the crate is not on crates.io. It brings
-huc6280-rust by path from a sibling clone, `../huc6280-rust` checked out at
-`e1d24a3`, while that commit is not on GitHub; `Cargo.toml` names the git pin
-that replaces the path once it is pushed.) Rust 1.85 or
+huc6280-rust by its git pin, `e1d24a3`; `Cargo.toml` shows how to build against a
+local checkout of the core instead, with a `--config` patch and no edit.) Rust 1.85 or
 newer. The library is `pcengine_rust`, and `pcengine_rust::huc6280`
 re-exports the CPU core.
 
@@ -238,8 +237,8 @@ two-VDC decode made again after a wait).
 
 | What | Version |
 | --- | --- |
-| pcengine-python (the reference) | `03ac6998c812a291e5f91882552df5ae712ba870` (the clean rewrite of 2026-11-19, `3318027`, plus the early display start crop; local, not on GitHub yet; 0.2.0 was proven against `v0.2.0`, `4c32f26`, 0.1.0 against `v0.1.0`, `bc9b976`) |
-| huc6280-rust (`huc6280`) | `e1d24a3` (from huc6280-python `6ce348e`, the revision the reference pins; both local, not on GitHub yet), by path from a sibling clone in `Cargo.toml` |
+| pcengine-python (the reference) | `03ac6998c812a291e5f91882552df5ae712ba870` (the clean rewrite of 2026-11-19, `3318027`, plus the early display start crop; 0.2.0 was proven against `v0.2.0`, `4c32f26`, 0.1.0 against `v0.1.0`, `bc9b976`) |
+| huc6280-rust (`huc6280`) | `e1d24a3` (from huc6280-python `6ce348e`, the revision the reference pins), by git revision in `Cargo.toml` (by path from a sibling clone until both were pushed on 2026-11-20) |
 | The HuCard library | 179 `.7z` images (the user's), and the Street Fighter II' card of the reference's `docs/cartridge.md` |
 | Covell's CPU test | `CPU_Test.zip`, SHA-256 `db65a32d…6c937b625` (the reference's pin) |
 
@@ -277,8 +276,8 @@ state checks are described in [docs/ladder.md](docs/ladder.md).
 
 ```text
 scripts/fetch_pcenginepython.sh [DEST] [SOURCE]   # the reference at 03ac699, with a PyPy venv
-                                        # (until pushed: SOURCE=a local pcengine-python clone,
-                                        # CORE_SOURCE=a local huc6280-python clone)
+                                        # (SOURCE= a local pcengine-python clone and
+                                        # CORE_SOURCE= a local huc6280-python clone, if wanted)
 scripts/fetch_covell.sh                 # Covell's CPU test by the reference's pin, into external/covell
 scripts/make_cases.py                   # scripts/cases.tsv and smoke.txt from the library's names
 scripts/rung1.sh [CPU_Test_10.pce]
@@ -309,10 +308,8 @@ CI (`.github/workflows/ci.yml`, main and pull requests) runs `cargo fmt
 --check`, `cargo clippy -D warnings`, `cargo test` (the sockets, the pads,
 the mappers on synthetic images, the PSG table, the save-state round trip and
 refusals on a synthetic card) and rung 1 on Covell's test, fetched by the
-reference's pin. The lockstep gate needs the library and runs by hand. CI
-clones huc6280-rust beside the checkout at `e1d24a3` for the path
-dependency; that commit is not on GitHub yet, so CI fails at the clone until
-it is pushed.
+reference's pin. The lockstep gate needs the library and runs by hand.
+huc6280-rust comes by its git pin (`e1d24a3`).
 
 ## Where Rust forced a difference
 
